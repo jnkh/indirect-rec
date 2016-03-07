@@ -6,7 +6,7 @@ using PyCall, Distributions,JLD,LightGraphs
 ##facebook: N = 4040, k = 44
 N = 4040#1000
 p = 0.2
-num_trials = 100
+num_trials = 1 #100
 num_trials_perc = 200
 graph_type_range = [:erdos_renyi,:watts_strogatz,:powerlaw_cluster,:fb]
 graph_name_range = ["erdos renyi", "watts strogatz", "powerlaw cluster", "facebook"]
