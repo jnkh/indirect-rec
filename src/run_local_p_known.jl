@@ -36,4 +36,6 @@ for (i,n) in enumerate(n_range)
 end
 
 save("../data/per_node_data/N_$(N)_$(now).jld","hist_all_degrees",hist_all_degrees,
-"hist_all_thresholds",hist_all_thresholds,"hist_all_clustering",hist_all_clustering)
+"hist_all_thresholds",hist_all_thresholds,"hist_all_clustering",hist_all_clustering,
+"graph_type_range",graph_type_range,"graph_name_range",graph_name_range,"N",N,"k",k,
+"n_range",n_range,"p",p,)
