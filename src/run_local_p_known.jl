@@ -31,11 +31,12 @@ for (i,n) in enumerate(n_range)
             hist_all_thresholds[i,j] = vcat(hist_all_thresholds[i,j],p_knowns)
             hist_all_clustering[i,j] = vcat(hist_all_clustering[i,j],LightGraphs.local_clustering_coefficient(g))
         end
+        println("n = $n, graph type: $(graph_name_range[j])")
 
     end
 end
 
-JLD.save("../data/per_node_data/N_$(N)_$(now).jld","hist_all_degrees",hist_all_degrees,
+JLD.save("../data/per_node_data/N_$(N)_$(now()).jld","hist_all_degrees",hist_all_degrees,
 "hist_all_thresholds",hist_all_thresholds,"hist_all_clustering",hist_all_clustering,
 "graph_type_range",graph_type_range,"graph_name_range",graph_name_range,"N",N,"k",k,
 "n_range",n_range,"p",p,)
