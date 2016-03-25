@@ -25,6 +25,7 @@ for (j,graph_type) in enumerate(graph_type_range)
 	        end
 	        p_know_range_perc_order[i,j,l] /= num_trials
         end
+        println("k = $k, graph type: $(graph_name_range[j])")
     end
 end
 
