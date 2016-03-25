@@ -10,7 +10,7 @@ num_trials = 1 #100
 num_trials_perc = 200
 graph_type_range = [:erdos_renyi,:watts_strogatz,:powerlaw_cluster,:fb]
 graph_name_range = ["erdos renyi", "watts strogatz", "powerlaw cluster", "facebook"]
-n_range = [2,7] 
+n_range = [2,3,4,5,7]
 k = 44#7
 
 #histogram data
