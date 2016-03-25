@@ -1,6 +1,6 @@
 push!(LOAD_PATH, pwd())
 using LightGraphs, IndirectRec, GraphConnectivityTheory,GraphCreation
-using PyCall, PyPlot, Distributions
+using PyCall, Distributions
 
 N = 100
 p = 0.2
