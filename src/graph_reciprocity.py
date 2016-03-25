@@ -8,6 +8,67 @@ b = 2
 c = 0.5
 payoffs = np.array([[b - c, -c,b-c],[b,0,0],[b-c,0,b-c]])
 
+def plot_histograms(all_thresholds,p,N_nodes):
+
+    flattened_thresholds = [item for sublist in all_thresholds for item in sublist]
+    min_thresh = min([item for item in flattened_thresholds if item >= 1.0])
+    max_thresh = max(flattened_thresholds)
+
+    for j in range(len(all_thresholds)):
+        thresholds = all_thresholds[j]
+        subplot(1,len(all_thresholds),j+1)
+        weights = ones_like(thresholds)/len(thresholds)
+        ax1 = hist(thresholds,alpha = 0.4,bins=20,weights=weights)
+        xlim([min_thresh,max_thresh])
+        xlabel(r'$\left(\frac{b}{c}\right)^*$',size=25)
+        if j == 0:
+            ylabel(r'probability',size=15)
+        else:
+            gca().set_yticklabels([])
+        grid()
+    suptitle(r'$p = ' + str(p) + '$, $N_{nodes} = ' + str(N_nodes) + '$',size=20)
+    show()
+
+
+def plot_colored_graphs(all_graphs,all_thresholds,all_degrees,graph_names,p):
+    figure()
+    flattened_colors = [item for sublist in all_thresholds for item in sublist]
+    vmin = min(flattened_colors)
+    vmax = max(flattened_colors)
+    N_nodes = len(all_thresholds[0])
+
+    for j in range(len(all_thresholds)):
+        thresholds = all_thresholds[j]
+        degrees = all_degrees[j]
+        G = all_graphs[j]
+        k = 2*len(G.edges())/len(G.nodes())
+        node_color = thresholds
+        node_size = [100.0*degrees[i]/k for i in range(len(G.nodes()))]
+        node_labels = {i:thresholds[i] for i in range(len(thresholds))}
+
+        if j == -1:
+            pos = nx.circular_layout(G)
+        else:
+            pos = nx.spring_layout(G,k=1.4/sqrt(len(G.nodes())))
+        print vmin,vmax
+        subplot(1,len(all_thresholds),j+1)
+        ax2 = nx.draw_networkx_nodes(G,pos,alpha=0.6,node_color=node_color,vmin=vmin,vmax=vmax,node_size=node_size,labels=node_labels,with_labels=False)
+        nx.draw_networkx_edges(G,pos,alpha=0.2)
+        gca().set_xticks([])
+        gca().set_yticks([])
+        xlabel(graph_names[j],size=20)
+
+    cbar = colorbar(ax2)
+    #labels = ['{:.2f}'.format(vmin + (vmax-vmin)*float(item.get_text())) for item in cbar.ax.get_yticklabels()]
+    #cbar.ax.set_yticklabels(labels)
+    cbar.ax.set_ylabel(r'$\left(\frac{b}{c}\right)^*$',size=25)
+
+    #cbar.ax.set_xlabel(r'node size $\sim k_i$',size=15)
+    suptitle(r'$p = ' + str(p) + '$, $N_{nodes} = ' + str(N_nodes) + '$, node size $\sim k$',size=20)
+
+    #normalize the number of edges for these graphs
+    #see whether springlayout does more iterations
+    show()
 
 def get_payoff(player_strategy,opponent_strategy,payoffs):
     return payoffs[player_strategy,opponent_strategy]
