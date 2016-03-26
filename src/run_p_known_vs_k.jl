@@ -30,6 +30,6 @@ for (j,graph_type) in enumerate(graph_type_range)
 end
 
 JLD.save("../data/per_graph_data/N_$(N)_$(now()).jld",
-"graph_type_range",graph_type_range,"graph_name_range",graph_name_range,"N",N,"k",k,
+"graph_type_range",graph_type_range,"graph_name_range",graph_name_range,"N",N,
 "n_range",n_range,"p",p,"p_know_range_perc_th",p_know_range_perc_th,"p_know_range_perc_order",
 p_know_range_perc_order,"k_range",k_range,"num_trials",num_trials,"num_trials_perc",num_trials_perc)
