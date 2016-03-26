@@ -2,7 +2,7 @@ module GraphCreation
 
 using PyCall, LightGraphs
 
-export create_graph, networkx_to_lightgraph
+export create_graph, networkx_to_lightgraph, read_edgelist
 
 function create_graph(N,k,graph_type=:erdos_renyi)
     p_edge = k/(N-1)
@@ -25,11 +25,25 @@ end
 @pyimport networkx as nx
 function networkx_to_lightgraph(G)
     g = LightGraphs.Graph(length(nx.nodes(G)))
+    nx_nodes = convert(Array{Int,1},nx.nodes(G))
+    nx_to_lg = get_mapping(nx_nodes)
     for e in nx.edges(G)
-        LightGraphs.add_edge!(g,e[1]+1,e[2]+1)
+        LightGraphs.add_edge!(g,nx_to_lg[e[1]],nx_to_lg[e[2]])
     end
     g
 end
+
+
+function get_mapping(nx_nodes::Array{Int,1})
+    nx_to_lg = Dict{Int,Int}()
+    for (lg_node,nx_node) in enumerate(nx_nodes)
+        nx_to_lg[nx_node] = lg_node
+    end
+    return nx_to_lg
+end
+
+
+
 
 function powerlaw_cluster_graph(N::Int,k::Int,beta::Real)
     G = nx.powerlaw_cluster_graph(N,k,beta)
