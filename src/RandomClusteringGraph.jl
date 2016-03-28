@@ -25,7 +25,13 @@ function generate_degree_sequence(d::Distribution,N::Int)
     degrees = zeros(Int,length(initial_degrees))
     for i in 1:length(degrees)
         deg = initial_degrees[i]
+        #make sure degree is not greater than number of nodes
+        while deg > N-1
+            deg = rand(d)
+        end
+        #make sure degree is nonnegative
         deg = max(0,deg)
+        #make sure degree is integer
         deg = Int(round(Int,deg))
         degrees[i] = deg
     end
