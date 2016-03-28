@@ -1,6 +1,7 @@
 module GraphCreation
 
-using PyCall, LightGraphs
+using PyCall, LightGraphs, Distributions
+using RandomClusteringGraph
 
 export create_graph, networkx_to_lightgraph, read_edgelist
 
@@ -16,6 +17,8 @@ function create_graph(N,k,graph_type=:erdos_renyi)
         g = powerlaw_cluster_graph(N,Int(round(0.5*(N-1)*p_edge)),1.0)
     elseif graph_type == :fb
         g = read_edgelist("../data/facebook_combined.txt")
+    elseif graph_type == :gamma_fb
+        g = random_clustering_graph(Gamma(1.0,k),N,0.6)
     else
         error("invalid graph type")
     end
