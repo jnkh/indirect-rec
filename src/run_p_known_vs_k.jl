@@ -16,15 +16,21 @@ k_range = similar(p_know_range_perc_th)
 p_known_fn = (x,y) -> get_p_known_first_order(x,y,p)
 for (j,graph_type) in enumerate(graph_type_range)
     for (i,k) in enumerate(k_ideal_range)
-        g = create_graph(N,k,graph_type)
-        k_range[i,j] = 2*LightGraphs.ne(g)/LightGraphs.nv(g)
-        p_know_range_perc_th[i,j] += get_p_known_percolation_theory(g,p)
-        for (l,n) in enumerate(n_range)
-	    	for trial_idx in 1:num_trials
+    	#several trials
+    	for trial_idx in 1:num_trials
+	        g = create_graph(N,k,graph_type)
+	        k_range[i,j] += 2*LightGraphs.ne(g)/LightGraphs.nv(g)
+	        p_know_range_perc_th[i,j] += get_p_known_percolation_theory(g,p)
+	        for (l,n) in enumerate(n_range)
 	            p_know_range_perc_order[i,j,l] += get_p_known_percolation(g,p,n,num_trials_perc)[end]
 	        end
-	        p_know_range_perc_order[i,j,l] /= num_trials
         end
+        #renormalization
+        for (l,n) in enumerate(n_range)
+    	    p_know_range_perc_order[i,j,l] /= num_trials
+    	end
+        p_know_range_per_th[i,j] /= num_trials
+        k_range[i,j] /=num_trials
         println("k = $k, graph type: $(graph_name_range[j])")
     end
 end
