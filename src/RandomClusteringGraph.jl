@@ -38,18 +38,23 @@ function generate_degree_sequence(d::Distribution,N::Int)
     degrees
 end
 
-function random_clustering_graph(degree_dist::Distribution,N::Int,C::AbstractFloat)
+function random_clustering_graph(degree_dist::Distribution,N::Int,C::AbstractFloati,delete_out=true)
     degs = generate_degree_sequence(degree_dist,N)
-    return random_clustering_graph(degs,N,C)
+    return random_clustering_graph(degs,N,C,delete_out)
 end
 
-function random_clustering_graph(degs::Array{Int,1},N::Int,C::AbstractFloat)
+function random_clustering_graph(degs::Array{Int,1},N::Int,C::AbstractFloat,delete_out = true)
     deg_seq_filename = "temp_degree_sequence_$(now()).dat"
     writedlm(deg_seq_filename,degs,'\t')
     out_filename = "tgf_out_$(now()).dat"
     run(`java -jar RandomClusteringNetwork.jar $deg_seq_filename $N $C $out_filename`)
     run(`rm $(deg_seq_filename)`) 
-    return read_edgelist(out_filename)
+    G =  read_edgelist(out_filename)
+    if delete_out
+        run(`rm $(out_filename)`) 
+    end
+    return G
+
 end
 
 end 
