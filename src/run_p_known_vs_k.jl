@@ -31,7 +31,7 @@ for (j,graph_type) in enumerate(graph_type_range)
         for (l,n) in enumerate(n_range)
     	    p_know_range_perc_order[i,j,l] /= num_trials
     	end
-        p_know_range_per_th[i,j] /= num_trials
+        p_know_range_perc_th[i,j] /= num_trials
         k_range[i,j] /=num_trials
         clustering_range[i,j] /=num_trials
         println("k = $k, graph type: $(graph_name_range[j])")
