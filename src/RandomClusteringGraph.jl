@@ -38,7 +38,7 @@ function generate_degree_sequence(d::Distribution,N::Int)
     degrees
 end
 
-function random_clustering_graph(degree_dist::Distribution,N::Int,C::AbstractFloati,delete_out=true)
+function random_clustering_graph(degree_dist::Distribution,N::Int,C::AbstractFloat,delete_out=true)
     degs = generate_degree_sequence(degree_dist,N)
     return random_clustering_graph(degs,N,C,delete_out)
 end
