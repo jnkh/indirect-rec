@@ -21,7 +21,7 @@ for (q,C) in c_ideal_range
 	    for (i,k) in enumerate(k_ideal_range)
 	    	#several trials
 	    	for trial_idx in 1:num_trials
-		        g = create_graph(N,k,graph_type)
+		        g = create_graph(N,k,graph_type,C)
 		        k_range[i,j,q] += 2*LightGraphs.ne(g)/LightGraphs.nv(g)
 		        clustering_range[i,j,q] += mean(LightGraphs.local_clustering_coefficient(g))
 		        p_know_range_perc_th[i,j,q] += get_p_known_percolation_theory(g,p)
