@@ -8,8 +8,8 @@ N = 4040#1000
 p = 0.2
 num_trials = 1 #100
 num_trials_perc = 200
-graph_type_range = [:erdos_renyi,:watts_strogatz,:powerlaw_cluster,:fb]
-graph_name_range = ["erdos renyi", "watts strogatz", "powerlaw cluster", "facebook"]
+graph_type_range = [:watts_strogatz,:fb,:fb_gamma,:fb_normal,:gamma_fb]#[:erdos_renyi,:watts_strogatz,:powerlaw_cluster,:fb]
+graph_name_range = ["watts_strogatz","fb","fb_gamma","fb_normal","gamma_fb"]#["erdos renyi", "watts strogatz", "powerlaw cluster", "facebook"]
 n_range = [2,3,4,5,7]
 k = 44#7
 
@@ -24,7 +24,7 @@ for (i,n) in enumerate(n_range)
         hist_all_degrees[i,j] = Any[]
         hist_all_clustering[i,j] = Any[]
         for l = 1:num_trials_curr
-            g = create_graph(N,k,graph_type)
+            g = create_graph(N,k,graph_type,0.5)
             p_knowns = get_p_known_percolation(g,p,n,num_trials_perc)[1]
     #         p_knowns = p_knowns[p_knowns .> 0.0]
             hist_all_degrees[i,j] = vcat(hist_all_degrees[i,j],LightGraphs.degree(g))
