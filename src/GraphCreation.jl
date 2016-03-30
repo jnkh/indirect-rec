@@ -5,24 +5,49 @@ using RandomClusteringGraph
 
 export create_graph, networkx_to_lightgraph, read_edgelist
 
-function create_graph(N,k,graph_type=:erdos_renyi)
+function create_graph(N,k,graph_type=:erdos_renyi,clustering=0.6)
     p_edge = k/(N-1)
     if graph_type == :erdos_renyi
         g = LightGraphs.erdos_renyi(N,p_edge)
     elseif graph_type == :watts_strogatz
-        g = LightGraphs.watts_strogatz(N,Int(round((N-1)*p_edge)),0.5)
+        g = LightGraphs.watts_strogatz_with_custering(N,Int(round(k)),clustering)
     elseif graph_type == :random_regular
-        g = LightGraphs.random_regular_graph(N,Int(round((N-1)*p_edge)))
+        g = LightGraphs.random_regular_graph(N,Int(round(k)))
     elseif graph_type == :powerlaw_cluster
         g = powerlaw_cluster_graph(N,Int(round(0.5*(N-1)*p_edge)),1.0)
     elseif graph_type == :fb
         g = read_edgelist("../data/facebook_combined.txt")
     elseif graph_type == :gamma_fb
-        g = random_clustering_graph(Gamma(1.0,k),N,0.6)
+        g = random_clustering_graph(Gamma(1.0,k),N,clustering)
     else
         error("invalid graph type")
     end
     g
+end
+
+
+function watts_strogatz_get_clustering(N,K,beta)
+    c1,c0 = watts_strogatz_clustering_limits(N,K)
+    return c1 + (c0-c1)*(1-beta)^3
+end
+
+function watts_strogatz_get_beta(N,K,C)
+    c1,c0 = watts_strogatz_clustering_limits(N,K)
+    beta = 1 - ((C - c1)/(c0 - c1))^(1.0/3)
+    return beta
+end
+
+function watts_strogatz_clustering_limits(N,K)
+    c1 = K/N
+    c0 = 3*(K-2)/(4*(K-1))
+    return c1,c0
+end
+
+function watts_strogatz_with_custering(N,K,C)
+    c1,c0 = watts_strogatz_clustering_limits(N,K)
+    C = clamp(C,c1,c0)
+    beta = watts_strogatz_get_beta(N,K,C)
+    return LightGraphs.watts_strogatz(N,K,beta)
 end
 
 @pyimport networkx as nx
