@@ -10,7 +10,7 @@ function create_graph(N,k,graph_type=:erdos_renyi,clustering=0.6)
     if graph_type == :erdos_renyi
         g = LightGraphs.erdos_renyi(N,p_edge)
     elseif graph_type == :watts_strogatz
-        g = LightGraphs.watts_strogatz_with_custering(N,Int(round(k)),clustering)
+        g = watts_strogatz_with_custering(N,Int(round(k)),clustering)
     elseif graph_type == :random_regular
         g = LightGraphs.random_regular_graph(N,Int(round(k)))
     elseif graph_type == :powerlaw_cluster
