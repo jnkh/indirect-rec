@@ -16,7 +16,7 @@ p_know_range_perc_order = zeros((length(k_ideal_range),length(graph_type_range),
 k_range = similar(p_know_range_perc_th)
 clustering_range = similar(p_know_range_perc_th)
 p_known_fn = (x,y) -> get_p_known_first_order(x,y,p)
-for (q,C) in c_ideal_range
+for (q,C) in enumerate(c_ideal_range)
 	for (j,graph_type) in enumerate(graph_type_range)
 	    for (i,k) in enumerate(k_ideal_range)
 	    	#several trials
