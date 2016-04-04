@@ -3,7 +3,7 @@ module GraphCreation
 using PyCall, LightGraphs, Distributions
 using RandomClusteringGraph
 
-export create_graph, networkx_to_lightgraph, read_edgelist
+export create_graph, networkx_to_lightgraph, read_edgelist, read_edgelist_julia
 
 function create_graph(N,k,graph_type=:erdos_renyi,clustering=0.6)
     p_edge = k/(N-1)
@@ -92,6 +92,17 @@ function make_networkx_graph_from_lightgraph(G::LightGraphs.Graph)
 end
 
 function read_edgelist(filename)
+    curr_edges = readdlm(filename,Int)
+    curr_nodes = unique(curr_edges)
+    g = LightGraphs.Graph(length(curr_nodes))
+    to_lg = get_mapping(curr_nodes)
+    for i = 1:size(curr_edges,1)
+        LightGraphs.add_edge!(g,to_lg[curr_edges[i,1]],to_lg[curr_edges[i,2]])
+    end
+    g
+end
+
+function read_edgelist_nx(filename)
     G = nx.read_edgelist(filename,nodetype=int)
     return networkx_to_lightgraph(G)
 end
