@@ -43,10 +43,12 @@ function random_clustering_graph(degree_dist::Distribution,N::Int,C::AbstractFlo
     return random_clustering_graph(degs,N,C,delete_out)
 end
 
-function random_clustering_graph(degs::Array{Int,1},N::Int,C::AbstractFloat,delete_out = true)
+function random_clustering_graph(degs::Array{Int,1},N::Int,C::AbstractFloat,delete_out = true,out_filename=nothing)
     deg_seq_filename = "temp_degree_sequence_$(now()).dat"
     writedlm(deg_seq_filename,degs,'\t')
-    out_filename = "tgf_out_$(now()).dat"
+    if out_filename == nothing
+        out_filename = "tgf_out_$(now()).dat"
+    end
     run(`java -jar RandomClusteringNetwork.jar $deg_seq_filename $N $C $out_filename`)
     run(`rm $(deg_seq_filename)`) 
     G =  read_edgelist(out_filename)
