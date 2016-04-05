@@ -18,9 +18,11 @@ function create_graph(N,k,graph_type=:erdos_renyi,clustering=0.6)
     elseif graph_type == :fb
         g = read_edgelist("../data/graphs/facebook_combined.txt")
     elseif graph_type == :fb_gamma
-        g = read_edgelist("../data/graphs/tgf_out_gamma_distribution_equal_clustering_fb_fit.dat")
+        g = read_edgelist("../data/graphs/fb_to_gamma_fit_clustering.dat")
     elseif graph_type == :fb_normal
-        g = read_edgelist("../data/graphs/tgf_out_normal_distribution_equal_clustering_fb_fit.dat")
+        g = read_edgelist("../data/graphs/fb_to_normal_fit_clustering.dat")
+    elseif graph_type == :fb_bter
+        g = read_edgelist("../data/graphs/bter_fit_facebook.dat")
     elseif graph_type == :gamma_fb
         g = random_clustering_graph(Gamma(1.0,k),N,clustering)
     else
