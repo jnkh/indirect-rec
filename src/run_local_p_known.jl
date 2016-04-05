@@ -24,7 +24,7 @@ for (i,n) in enumerate(n_range)
         hist_all_degrees[i,j] = Any[]
         hist_all_clustering[i,j] = Any[]
         for l = 1:num_trials_curr
-            g = create_graph(N,k,graph_type,0.5)
+            g = create_graph(N,k,graph_type,0.605)
             p_knowns = get_p_known_percolation(g,p,n,num_trials_perc)[1]
     #         p_knowns = p_knowns[p_knowns .> 0.0]
             hist_all_degrees[i,j] = vcat(hist_all_degrees[i,j],LightGraphs.degree(g))
