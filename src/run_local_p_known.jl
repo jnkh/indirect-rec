@@ -5,12 +5,12 @@ using PyCall, Distributions,JLD,LightGraphs
 
 ##facebook: N = 4040, k = 44
 N = 4040#1000
-p = 0.2
+p = 0.1
 num_trials = 1 #100
 num_trials_perc = 200
-graph_type_range = [:watts_strogatz,:fb,:fb_gamma,:fb_normal,:gamma_fb]#[:erdos_renyi,:watts_strogatz,:powerlaw_cluster,:fb]
-graph_name_range = ["watts_strogatz","fb","fb_gamma","fb_normal","gamma_fb"]#["erdos renyi", "watts strogatz", "powerlaw cluster", "facebook"]
-n_range = [2,3,4,5,7]
+graph_type_range = [:fb,:fb_bter,:watts_strogatz,:fb_gamma,:fb_normal,:gamma_fb]#[:erdos_renyi,:watts_strogatz,:powerlaw_cluster,:fb]
+graph_name_range = ["fb","fb_bter","watts_strogatz","fb_gamma","fb_normal","gamma_fb"]#["erdos renyi", "watts strogatz", "powerlaw cluster", "facebook"]
+n_range = [2,3,4,5,7,100]
 k = 44#7
 
 #histogram data
