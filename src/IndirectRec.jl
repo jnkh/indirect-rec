@@ -1,8 +1,8 @@
 module IndirectRec
 
-using LightGraphs, PyCall, Distributions
+using LightGraphs, PyCall, Distributions, GraphConnectivityTheory
 
-export get_p_known_percolation
+export get_p_known_percolation, get_num_mutual_neighbors, get_mean_p_known_for_node
 
 
 function get_num_mutual_neighbors(g::LightGraphs.Graph,e::Pair{Int,Int})
