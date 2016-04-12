@@ -66,34 +66,104 @@
 
     \begin{abstract}
 
+Indirect reciprocity has long been considered \cite{nowak2006five} an important mechanism for stabilizing cooperative behavior in evolving populations. Indirect reciprocity functions by assigning a reputation to all players in a game, such that players --- even ones that haven't yet encountered each other --- will know what to expect of each other. This allows cooperators to avoid exploitation by defectors and thus ``safe'' cooperation among each other. Similarly, the benefits of defectors are reduced because they can't exploit the system anymore. Several models have been proposed that explicitly construct a reputation score for each player based on their past behavior \cite{nowak2005evolution}. However, this approach is subject to amgiguities. It seems reasonable to increase positive reputation upon observing cooperative behavior and vice versa with defection. However, what about someone who defects on another player with a known negative reputation? Is this a true defection or merely ``clever''? What about cooperating with a known defector? Is this a true cooperation or ``naive''?. Further considerations of lying, manipulation of reputation, feigning cooperation, etc further complicate the matter. We all know from our daily lives that political behavior and the manipulation of reputations are truly complex ``games'' that deserve attention in their own right.
 
-    We consider a model of indirect reciprocity on graphs with a prisoner's
-dilemma game being played between nodes. Indirect reciprocity is encoded
-by establishing a probability for each node to know the strategy of its
-neighbor. This probability of ``correct'' gossip may depend on the local
-graph structure. We find that under reasonable assumptions, the
-introduction of this information flow increases the stability and payoff
-of cooperative strategies competing with defectors. Moreover, this
-effect is pronounced in graphs resembling realistic social networks,
-such as small-world networks and scale-free networks. Finally, we find
-that the introduction of gossip causes neighbors and connectivity to
-positively influence the payoff of cooperators. This stands in contrast
-to the opposite result for direct cooperation, where the number of
-neighbors should be minimal to favor cooperation. This new result is
-more in line with the intuition that more complex and connected social
-networks should support cooperation.
+In order to avoid these issues in analyzing how a reputation is \emph{developed},and to focus on the \emph{effects} of a reputation once it exists, we will attempt to capture the above effects in a single parameter $p$, the probability that information about another player (in our case information about the strategy of a given player, i.e. their reputation) is correctly transmitted across a given edge in the network.
+
+We consider thus a model of indirect reciprocity on a network and study its effect on the stability of cooperative strategies for a prisoner's dilemma game being played among nodes. Indirect reciprocity is encoded by establishing a probability for each node to correctly know the strategy of its neighbor. This probability of ``correct'' gossip may depend on the local graph structure. We find that under reasonable assumptions, the introduction of this information flow increases the stability and payoff of cooperative strategies competing with defectors. Moreover, this effect is pronounced in graphs resembling realistic social networks, such as small-world networks and scale-free networks. Finally, we find
+that the introduction of gossip causes high connectivity and local clustering to positively influence the payoff of cooperators. This stands in contrast to the opposite result without indirect reciprocity \cite{ohtsuki2006simple}, where the number of neighbors should be minimal to favor cooperation. This new result is more in line with the intuition that more complex and connected social networks should support cooperation.
 
 \end{abstract}
 
-\section{Introduction}
+% \section{Introduction}
 
+Research in sociology has long argued that high embededness (the number of common neighbors shared by the endpoints of an edge) in a network allows higher trust between individuals \cite{easley2010networks}, primarily via mechanisms of social sanctions and reputational consequences. However, results in the study of the evolution of cooperation without reputation effects \cite{ohtsuki2006simple} have found that cooperative strategies are favored on networks with lower numbers of neighbors per node. In this paper, we develop a simple, intuitive model that naturally resolves this discrepancy by considering the effect of indirect reciprocity.
 
-We consider for simplicity only two strategies: defectors, and ``clever'' cooperators. Defectors always defect. Clever cooperators cooperate always unless they know their partner to be a defector. In the later case, they act like a defector. In the resulting game between two players, a cooperating player provides a benefit $b$ to the other player. In return, he incurs a cost $c$, which is assumed to be less than $b$. A defector does not incur a cost, and does not provide a benefit to the other player.
+We consider a prisoner's dilemma game being played on a network.For simplicity we allow only two strategies: defectors, and ``clever'' cooperators. Defectors always defect. Clever cooperators cooperate always unless they know their partner to be a defector. In the later case, they act like a defector. In the resulting game between two players, a cooperating player provides a benefit $b$ to the other player. In return, he incurs a cost $c$, which is assumed to be less than $b$. A defector does not incur a cost, and does not provide a benefit to the other player.
 
 We now imagine this game being played once among the members of a social network. The members of the networks are given by the nodes, and the relationships are given by the edges of an undirected graph. We include the role of indirect reciprocity and reputations via a ``gossip'' mechanism. In particular, for two nodes $i$ and $j$ there is a probability $P_{ij}$ that node $i$ knows the strategy of node $j$. In general, this $P$ can depend on the nodes in question and the structure of the graph that they are embedded in. One might imagine $P$ this as the probability that the gossip about node $j$ reaches node $i$ \emph{and} is correct. Note that we have not included any time-dependence in the game. The gossip structure has been fixed by the time the game is played. One might imagine this as modeling a separation of time-scales: observations, gossip and reputations develop over many sparse interactions. This process is assumed to have equilibrated before our situation of a single game interaction.
 
 
-\section{A Simple Model of Indirect Reciprocity}
+% \section{A Simple Model of Indirect Reciprocity}
+
+
+
+
+
+We model indirect reciprocity as the ability of the network to transmit the information about players' strategies to their neighbors. The basic intuition is that a highly connected network will more readily spread this information than an isolated network. A cooperator can avoid exploitation by a defector neighbor only if it learns about the defector nature of this neighbor. We can imagine the information about a defector to spread across the graph. Therefore, the probability of a correct
+transmission of information should depend on the local structure of the social network. In particular, we assume every edge on the graph transmits gossip correctly with a probability $p$. The probability $P_{ij}$ that node $i$ ``knows''
+node $j$'s reputation is then given by the edge percolation probability between nodes $i$ and $j$ on the graph in question. In our case we are only interested in sets of two nodes that are neighbors on the graph. This is a consequence of the fact that the ``game graph'' (i.e.~who plays with whom) is the same as the ``social graph'' (i.e.~who interacts with whom/who knows whom). This is a reasonable assumption, but one might also extend the problem to considering separate graphs for these two cases.
+
+Since the nodes in question are neighbors, the most likely (lowest order in $p$) contribution to $P$ comes from knowing the neighbor directly. The next order is given by the transmission of information across neighbors (i.e.~paths of length $2$), and so on. We can thus expand the percolation probability in the lowest orders and only consider the
+shortest paths (e.g.~lengths $1$ and $2$) in our calculation. This also
+represents a reasonable assumption that gossip that has been transmitted
+across several nodes loses its value to be further transmitted, which
+reduces the weight of the longer paths in the computation of the
+probability even further. To lowest (zeroth) order we thus have
+\begin{equation}\label{eq:zeroth_order_gossip}
+P_{ij} = 1 - (1-p) = p
+\end{equation}
+ and to first order\footnote{The chances that the information arrives is given by
+$1 - $ the probability that all transmissions fail. In the second
+formula, for example, this is the case when the transmission fails
+across the direct neighbor edge \emph{and} across all paths of length
+$2$.}
+\begin{equation}\label{eq:first_order_gossip}
+P_{ij} = 1 - (1-p)(1-p^2)^{n_{ij}}
+\end{equation}
+where $n_{ij}$ is the number of mutual neighbors of nodes $i$ and $j$. We could of course include even higher order in calculating the percolation probability. We omit this here for several reasons. First, keeping only the lowest order contribution highlights the key effects of gossip without complicating the problem. Second, it is intuitive that there might be a super-exponential cutoff for the probability that gossip is transmitted across more than $2-3$ nodes --- this rarely happens in practice, and it is not interesting for us to gossip about people we have no connection to. Finally, the effect of including longer paths in the calculation \emph{strictly increases} $P$, which as we will see is a strictly more favorably condition for cooperators over defectors. Thus, keeping only the lowest order is the most conservative estimate of the positive effect of indirect reciprocity on cooperation.
+
+ Note also that the lowest order approximation is equivalent to a
+constant $P$ throughout the graph. This can be regarded as a purely direct reciprocity approach.
+We play with an individual, and with probability $p$ we have played with
+him before and accurately remember his strategy. The second equation
+actually involves gossip, referring to the flow of information across
+the network beyond just direct observation. Our model of information flow is described in figure \ref{fig:gossip}.
+
+% \section{Analytical Results}
+% \subsection{Direct Reciprocity}
+As a simple first case, let us assume that the value
+$P(i,j,G) = P \equiv p$ is a constant. This is the case if we consider only first-order information flow (without real gossip), as in figure \protect\subref{fig:graph_first}. In this case, the new game
+represents essentially a transformation of the payoff matrix regarding
+expected returns. In particular, we can easily compute the expected payoffs for cooperators and defectors in this setting. By equating these, we obtain a simple condition for stability between cooperative and defective strategies. For the case of a single defector among a large number of cooperators, the condition takes the form
+\begin{equation}\label{eq:bc_threshold}
+\frac{b}{c} > \frac{1}{P} \equiv \left( \frac{b}{c}\right)^*
+\end{equation}
+which is equivalent to past results stuyding the emergence of indirect reciprocity \cite{nowak1998evolution} when $P$ is taken as the probability of ``knowing'' accurately another player's strategy. In the zeroth-order case, $P$ is the probability that a player knows its neighbors strategy from direct observation, which is equivalent to the result of \cite{nowak2006five}.
+It is important to note that increasing $p$ gives an ``easier'' critical threshold $\left( \frac{b}{c}\right)^*$. In other words, cooperators are favored more, the better the information flow.
+
+% \subsection{Indirect Reciprocity}
+Now, let us add the lowest order gossip contribution as shown in equation \ref{eq:first_order_gossip}.
+For an Erdos-Renyi random graph we obtain as the average value of $P$ across the graph, to a good approximation
+\begin{equation}\label{eq:P_first_order}
+P \approx 1 - (1-p)(1-p^2)^{q^2N}
+\end{equation}
+which using equation \ref{eq:bc_threshold} gives the average (taken over all nodes) threshold value $\left( \frac{b}{c}\right)^*$ necessary to stabilize cooperation.This condition is exact for
+a homogeneous graph (where the graph looks the same from each node) because $P$ is the same for every node. For graphs with wide degree distributions, the results will vary because the central limit theorem applied to equation \label{eq:first_order_gossip} does not guarantee concentration of quantities like $n_{ij}$ around their means across the graph anymore. The condition can be used to find lower bounds necessary to stabilize cooperation for salient parameters like $k = q N$ (the average number of neighbors), $p$ (the efficiency of information spread) or $b/c$, respectively, as all other parameters are held fixed.
+
+We can stabilize cooperation either by making gossip efficient enough (increasing $p$) or by making the graph more densely connected (increasing $k$). This stands in contrast to results in direct reciprocity, where more neighbors make it more \emph{difficult} to stabilize cooperation \cite{ohtsuki2006simple}. Our results are sensible. Given that we have gossip, the gossip must either transmit information well, or there must be many possible paths information flow, in order for a node to be able to avoid exploitation by defectors. Of course, recall that our expression for $P$ is now strictly greater than $p$ since we included gossip. From equation \ref{eq:bc_threshold}, this means that gossip makes $\left( \frac{b}{c}\right)^*$ less stringent. Sensibly, we find that gossip makes it even ``easier'' to support cooperation. 
+
+% \section{Simulation Results}
+We test our predictions against simulations of this game for different types of graphs. We expect that the structure of the graphs will have an impact on the relative payoffs for cooperators and defectors, since they affect how well the gossip spreads throughout the network. In particular, we consider in addition to the Erdos-Renyi random graph the Watts-Strogats ``small-world'' graph \cite{watts1998collective}, as well as a model of a scale-free network \cite{holme2002growing} with high clustening. Both of these graph types have been suggested more accurately represent social networks.
+
+% \subsection{More connections, more cooperation}
+
+Figure \ref{fig:b_c_critical} shows the critical thresholds $\left( \frac{b}{c} \right)^*$, as given by equation \ref{eq:bc_threshold}, necessary for a population of all cooperators to be stable. They are plotted as a function of $k$, which is a measure of the connectivity of the graph. The better connected the graph is, we find that gossip spreads more easily and the thresholds drop. The threshold is always stricter in the case without gossip (which is shown for reference as the vertical blue line). Gossip makes it easier to stabilize cooperation. Moreover, the thresholds for defectors for the ``social network''-like graphs are even lower than for the Erdos-Renyi random graph. This is because gossip can spread more easily on these graphs since nodes tend to be more clustered and have more common neighbors than would be expected by random chance. The gossip allows the cooperators to obviate exploitation by the defectors and costs defectors much of their payoff. We also show this dependence for various values of $p$. As one would expect intuitively, the higher $p$, the better the gossip can spread, and the lower the thresholds become.
+
+% \subsection{Local Variation}
+Naturally, in a generic graph, not all nodes ``see'' the same local graph structure. They might have different numbers of neighbors and might have varying numbers of mutual connections with each of their neighbors. As a consequence, there exists really a local \emph{distribution} of critical thresholds $\left( \frac{b}{c} \right)^*$, one for each node. This threshold is given by the average value of $P$ for that node (averaged over all its neighbors). We visualize this in figure \ref{fig:local_thresholds}. We find as expected that well-connected hubs have low thresholds, while outlier nodes have high thresholds. The former are well connected among their neighbors and thus gossip about them spreads well, while the opposite is the case for the latter. Since the small-world graphs and especially the clustered, scale-free graph have more mutual neighbors between two given nodes than would be expected by chance, the critical thesholds are particularly low for nodes in these graphs.
+
+% \section{Literature Review}
+\section*{Acknowledgements}
+
+
+    We thank Ben Adlam for helpful discussions. J. K.-H. was supported by the Department of Energy Computational Science Graduate Fellowship.
+
+\bibliography{references}
+
+
+%==============================FIGURES==============================
+\newpage
 
 \begin{figure}
 \centering
@@ -118,104 +188,6 @@ We now imagine this game being played once among the members of a social network
   \label{fig:gossip}
 \end{figure}
 
-
-
-
-We model indirect reciprocity as the ability of the network to transmit the information about players' strategies to their neighbors. The basic intuition is that a highly connected network will more readily spread this information than an isolated network. A cooperator can avoid exploitation by a defector neighbor only if it learns about the defector nature of this neighbor.
-
-We can imagine the information about a defector to spread across the graph. Therefore, the probability of a correct
-transmission of information should depend on the local structure of the social network. In particular, we assume every edge on the graph transmits gossip correctly with a probability $p$. The probability $P_{ij}$ that node $i$ ``knows''
-node $j$'s reputation is then given by the edge percolation probability between nodes $i$ and $j$ on the graph in question. In our case we are only interested in sets of two nodes that are neighbors on the graph. This is a consequence of the fact that the ``game graph'' (i.e.~who plays with whom) is the same as the ``social graph'' (i.e.~who interacts with whom/who knows whom). This is a reasonable assumption, but one might also extend the problem to considering separate graphs for these two cases.
-
-Since the nodes in question are neighbors, the most likely (lowest order in $p$) contribution to $P$ comes from knowing the neighbor directly. The next order is given by the transmission of information across neighbors (i.e.~paths of length $2$), and so on. We can thus expand the percolation probability in the lowest orders and only consider the
-shortest paths (e.g.~lengths $1$ and $2$) in our calculation. This also
-represents a reasonable assumption that gossip that has been transmitted
-across several nodes loses its value to be further transmitted, which
-reduces the weight of the longer paths in the computation of the
-probability even further. To lowest (zeroth) order we thus have
-$$P_{ij} = 1 - (1-p) = p$$
- and to first order\footnote{The chances that the information arrives is given by
-$1 - $ the probability that all transmissions fail. In the second
-formula, for example, this is the case when the transmission fails
-across the direct neighbor edge \emph{and} across all paths of length
-$2$.}
-$$P_{ij} = 1 - (1-p)(1-p^2)^{n_{ij}}$$
-where $n_{ij}$ is the number of mutual neighbors of nodes $i$ and $j$. We could of course include even higher order in calculating the percolation probability. We omit this here for several reasons. First, keeping only the lowest order contribution highlights the key effects of gossip without complicating the problem. Second, it is intuitive that there might be a super-exponential cutoff for the probability that gossip is transmitted across more than $2-3$ nodes --- this rarely happens in practice, and it is not interesting for us to gossip about people we have no connection to. Finally, the effect of including longer paths in the calculation \emph{strictly increases} $P$, which as we will see is a strictly more favorably condition for cooperators over defectors. Thus, keeping only the lowest order is the most conservative estimate of the positive effect of indirect reciprocity on cooperation.
-
- Note also that the lowest order approximation is equivalent to a
-constant $P$ throughout the graph. This can be regarded as a purely direct reciprocity approach.
-We play with an individual, and with probability $p$ we have played with
-him before and accurately remember his strategy. The second equation
-actually involves gossip, referring to the flow of information across
-the network beyond just direct observation. Our model of information flow is described in figure \ref{fig:gossip}.
-
-\section{Analytical Results}
-\subsection{Direct Reciprocity}
-As a simple first case, let us assume that the value
-$P(i,j,G) = P \equiv p$ is a constant. This is the case if we consider only first-order information flow (without real gossip), as in figure \protect\subref{fig:graph_first}. In this case, the new game
-represents essentially a transformation of the payoff matrix regarding
-expected returns.
-
-We can compute the expected payoffs for cooperators and defectors as
-follows. Given a random graph, we expect on average $N q$
-neighbors for any node, where $q$ is the probability that a given edge exists.
-Now, for each of these neighbors, we have a fraction $p_c$ of
-cooperators and the rest defectors. From the point of view of a cooperator, the payoff of encountering a
-defector ($-c$) is only realized when the identity of the defector is
-\emph{not} known. This leads us to the following:
-\[E[\text{payoff}|C,P] = N q \left(p_c (b - c) + (1 - p_c) (1 - P) (-c)\right)\]
-Similar reasoning gives:
-\[E[\text{payoff}|D,P] = N q p_c(1- P) b\]
-
-Setting these equal, we find the condition for stability between
-cooperative and defective strategies:
-\begin{equation}\label{eq:bc_threshold}
-\frac{b}{c} > \frac{1 - P(1- p_c)}{Pp_c} = \frac{1 - p (1- p_c)}{p p_c}
-\end{equation}
-It is important to note that increasing $p$ strictly increases the denominator and decreases the numerator. This means that increasing $p$ gives an ``easier'' condition on $b/c$. In other words, we obtain the sensible result that the payoffs need to be less beneficial to cooperators, the better the information flow.
-
-\subsection{Indirect Reciprocity}
-Now, let us add the lowest order gossip contribution, which gives
-\[P(e,G) = 1 - (1-p)(1-p^2)^{\text{n}(n_0,n_1)}\]
-For an Erdos-Renyi, random graph like we have, we can approximate
-\[P(e,G) = E[1 - (1-p)(1-p^2)^{\text{n}(n_0,n_1)}] \approx 1 - (1-p)(1-p)^{E[\text{n}(n_0,n_1)]}\;.\]
-In the second term we can move the expectation into the exponent to a good approximation for large graphs, because the values of $n$ are highly concentrated around their means (due to the central limit theorem). With
-\[E[\text{n}(n_0,n_1)] \approx q^2N_{nodes}\]
-we get
-\begin{equation}\label{eq:P_first_order}
-P(e,G) \approx 1 - (1-p)(1-p^2)^{q^2N_{nodes}}
-\end{equation}
-which we can then plug into our formulas for $E[\text{payoff},C/D,P]$ to obtain an approximate threshold value for $b/c$. This condition is exact for
-a homogeneous graph (where the graph looks the same from each node) because $P$ is the same for every node. For other non-Erdos-Renyi
-graphs, the results will vary because the expectation does not carry
-through linearly as well anymore (in particular, $P(i,j,G)$ is a
-nonlinear function of the local graph structure and thus its expectation
-over all graph instances will be complicated).
-
-Of course, recall that our expression for $P$ is now strictly greater than $p$ since we included gossip. From equation \ref{eq:bc_threshold}, this means that gossip makes the condition for $b/c$ less stringent. Sensibly, we find that gossip makes it even ``easier'' to support cooperation. 
-
-
-\subsection{Nash Equilibrium for All-C}
-We are interested in the conditions for stabilizing a population of all-cooperators from invading defectors. The Nash equilibrium condition for this is given by equation \ref{eq:bc_threshold} in the limit of $p_c \to 1$. This gives
-
-\begin{equation}\label{eq:bc_threshold}
-\left(\frac{b}{c}\right)_{critical} > \frac{1}{P}
-\end{equation}
-
-For the case with gossip, $P(e,G) \approx 1 - (1-p)(1-p^2)^{q^2N_{nodes}}$. For a given value of $b/c$, we can then find a $p$ such that the condition is satisfied. Moreover, holding all other parameters fixed, we can also find a value of $q$ that makes the condition true, in particular, we have
-$$k \equiv N q > \sqrt{N  \left(\frac{log(1 - \frac{c}{b}) - log(1 - p)}{log(1 - p^2)}\right)}\;.$$
-We have found a condition on the \emph{average number of neighbors} for a given graph. We can stabilize cooperation either by making gossip efficient enough (varying $p$) or by making the graph more densely connected (varying $q$). This stands in contrast to results in direct reciprocity, where more neighbors make it more \emph{difficult} to stabilize cooperation. Our results are sensible. Given that we have gossip, the gossip must either transmit information well, or there must be many possible paths information flow, in order for a node to be able to avoid exploitation by defectors. 
-
-\section{Simulation Results}
-We know test our predictions against simulations of this game for different types of graphs. We expect that the structure of the graphs will have an impact on the relative payoffs for cooperators and defectors, since they affect how well the gossip spreads throughout the network.
-
-In particular, we consider in addition to the Erdos-Renyi random graph the Watts-Strogats ``small-world'' graph \cite{watts1998collective}, as well as a model of a scale-free network \cite{holme2002growing} with high clustening. Both of these graph types have been suggested more accurately represent social networks.
-
-\subsection{More connections, more cooperation}
-
-Figure \ref{fig:b_c_critical} shows the critical thresholds for $\frac{b}{c}$, as given by equation \ref{eq:bc_threshold}, necessary for a population of all cooperators to be stable. They are plotted as a function of $k$, which is a measure of the connectivity of the graph. The better connected the graph is, we find that gossip spreads more easily and the thresholds drop. The threshold is always stricter in the case without gossip (which is shown for reference as the vertical blue line). Gossip makes it easier to stabilize cooperation. Moreover, the thresholds for defectors for the ``social network''-like graphs are even lower than for the Erdos-Renyi random graph. This is because gossip can spread more easily on these graphs since nodes tend to be more clustered and have more common neighbors than would be expected by random chance. The gossip allows the cooperators to obviate exploitation by the defectors and costs defectors much of their payoff. We also show this dependence for various values of $p$. As one would expect intuitively, the higher $p$, the better the gossip can spread, and the lower the thresholds become.
-
-
 \begin{figure}
 \noindent\makebox[\textwidth]{
   \includegraphics[width=0.5\textwidth]{figures/b_c_critical_vs_k_p0.05.png}\label{fig:b_c_critical_005}
@@ -227,13 +199,12 @@ Figure \ref{fig:b_c_critical} shows the critical thresholds for $\frac{b}{c}$, a
   \includegraphics[width=0.55\textwidth]{figures/b_c_critical_vs_k_p0.6.png}\label{fig:b_c_critical_06}
 }
 \caption{
-We plot the critical Nash threshold for stability of All-C, as given by equation \ref{eq:bc_threshold}, as a function of the average number of neighbors $k$. The blue line gives the threshold for the case $P=p$, i.e. no gossip. When we include gossip, as the connectivity of the graph (as measured by $k$) increases, gossip is more likely to be transmitted, defectors are easier to avoid, and the threshold becomes lower. The simulation results for different types of graphs are shown by the green connected symbols. The theoretical prediction based on equation \ref{eq:P_first_order} is given by the broken black line. We find that our theoretical prediction maps well onto the Erdos-Renyi random graph. The small-world and scale-free clustered graphs show an even lower critical threshold. In these graphs, the average connectivity (in this case, the number of mutual neighbors between any two nodes) is even higher than by random chance, and thus gossip spreads more easily. We vary $p \in \{0.05,0.2,0.6\}$ in the three plots. Naturally, as the strength of gossip increases, the critical thresholds fall drastically.}
+We plot the critical Nash threshold for stability of All-C, as given by equation \ref{eq:bc_threshold}, as a function of the average number of neighbors $k$, for graphs with $N = 1000$. The blue line gives the threshold for the case $P=p$, i.e. no gossip. When we include gossip, as the connectivity of the graph (as measured by $k$) increases, gossip is more likely to be transmitted, defectors are easier to avoid, and the threshold becomes lower. The simulation results for different types of graphs are shown by the green connected symbols. The theoretical prediction based on equation \ref{eq:P_first_order} is given by the broken black line. We find that our theoretical prediction maps well onto the Erdos-Renyi random graph. The small-world and scale-free clustered graphs show an even lower critical threshold. In these graphs, the average connectivity (in this case, the number of mutual neighbors between any two nodes) is even higher than by random chance, and thus gossip spreads more easily. We vary $p \in \{0.05,0.2,0.6\}$ in the three plots. Naturally, as the strength of gossip increases, the critical thresholds fall drastically.}
 
 \label{fig:b_c_critical}
 \end{figure}
  
-\subsection{Local Variation}
-Naturally, not all nodes are embedded in the same local graph structure. They might have different numbers of neighbors and might have varying numbers of mutual connections with each of their neighbors. As a consequence, there is in essence a local distribution of critical thresholds, one for each node. This threshold is given by the average value of $P$ for that node (averaged over all its neighbors). We visualize this in figure \ref{fig:local_thresholds}. We find as expected that well-connected hubs have low thresholds, while outlier nodes have high thresholds. The former are well connected among their neighbors and thus gossip about them spreads well, while the opposite is the case for the latter. Since the small-world graphs and especially the clustered, scale-free graph have more mutual neighbors between two given nodes than would be expected by chance, the critical thesholds are particularly low for nodes in these graphs.
+
 
 \begin{figure}
 \noindent\makebox[\textwidth]{
@@ -245,21 +216,13 @@ Naturally, not all nodes are embedded in the same local graph structure. They mi
   \includegraphics[width=\textwidth]{figures/graph_viz_scatters_p04_N100.png}
 }
 \caption{
-On top, we plot a histograms of the critical threshold values $\left(\frac{b}{c}\right)_{critical}$ for all nodes $i$ (these are taken over many example graphs). At the bottom, we plot several examplegraphs. The size of the nodes is proportional to their number of neighbors $k$, while the color is proportional to the local value of the critical threshold $\left(\frac{b}{c}\right)_{critical}$ for that node. As expected, well connected ``hub'' nodes have low thresholds, while outlier nodes with poor connections to their neighbors have high thresholds. These plots are repeated for all three types of graphs analyzed in this paper.}
+On top, we plot a histograms of the critical threshold values $\left(\frac{b}{c}\right)^*$ for all nodes $i$ (these are taken over many example graphs). At the bottom, we plot several examplegraphs. The size of the nodes is proportional to their number of neighbors $k$, while the color is proportional to the local value of the critical threshold $\left(\frac{b}{c}\right)^*$ for that node. As expected, well connected ``hub'' nodes have low thresholds, while outlier nodes with poor connections to their neighbors have high thresholds. These plots are repeated for all three types of graphs analyzed in this paper.}
 
 \label{fig:local_thresholds}
 \end{figure}
 
-\section{Literature Review}
-Research in sociology has long argued that embededness (the number of common neighbors shared by the endpoints of an edge) allows higher trust between individuals \cite{easley2010networks}. This is because of social sanctions and reputational consequences.
-
-\section{Acknowledgements}
 
 
-    We thank Prof.~Martin Nowak for guidance and helpful discussions, as
-well as Ben Adlam for his support.
-
-\bibliography{references}
                 
 
     % Add a bibliography block to the postdoc
@@ -269,6 +232,11 @@ well as Ben Adlam for his support.
     \end{document}
 
 
+Unused:
+
+=======================
+
+Payoff Matrix:
 
 The payoff matrix is given as follows for states $C,D$
 
@@ -279,8 +247,10 @@ the following payoff matrix:
 
 \[P = \begin{pmatrix} b - c & -c & b-c \\ b & 0 & 0 \\ b - c& 0 & b - c\end{pmatrix}\]
 
+=======================
 
 
+Computing the nash equilibrium condition:
 
 We can compute the expected payoffs for cooperators and defectors as
 follows. Given a random graph, we expect on average $N q$
@@ -293,3 +263,29 @@ defector ($-c$) is only realized when the identity of the defector is
 Similar reasoning gives:
 \[E[\text{payoff}|D,P] = N q p_c(1- P) b\]
 
+\begin{equation}\label{eq:bc_threshold}
+\frac{b}{c} > \frac{1 - P(1- p_c)}{Pp_c} = \frac{1 - p (1- p_c)}{p p_c}
+\end{equation}
+
+=======================
+
+Central limit theorem and replica trick:
+
+\[P_{ij} = E[1 - (1-p)(1-p^2)^{n_{ij}}] \approx 1 - (1-p)(1-p)^{E[n_{ij}]}\;.\]
+In the second term we can move the expectation into the exponent to a good approximation for large graphs, because the values of $n$ are highly concentrated around their means (due to the central limit theorem). With
+\[E[n_{ij}] \approx q^2N\]
+we get
+
+============================
+
+
+\subsection{Nash Equilibrium for All-C}
+We are interested in the conditions for stabilizing a population of all-cooperators from invading defectors. The Nash equilibrium condition for this is given by equation \ref{eq:bc_threshold} in the limit of $p_c \to 1$. This gives
+
+\begin{equation}\label{eq:bc_threshold}
+\left(\frac{b}{c}\right)^* > \frac{1}{P}
+\end{equation}
+
+For the case with gossip, $P(e,G) \approx 1 - (1-p)(1-p^2)^{q^2N_{nodes}}$. For a given value of $b/c$, we can then find a $p$ such that the condition is satisfied. Moreover, holding all other parameters fixed, we can also find a value of $q$ that makes the condition true, in particular, we have
+$$k \equiv N q > \sqrt{N  \left(\frac{log(1 - \frac{c}{b}) - log(1 - p)}{log(1 - p^2)}\right)}\;.$$
+We have found a condition on the \emph{average number of neighbors} for a given graph. 
