@@ -50,7 +50,9 @@ function random_clustering_graph(degs::Array{Int,1},N::Int,C::AbstractFloat,dele
         out_filename = "tgf_out_$(now()).dat"
     end
     run(`java -jar RandomClusteringNetwork.jar $deg_seq_filename $N $C $out_filename`)
-    run(`rm $(deg_seq_filename)`) 
+    if isfile(deg_seq_filename)
+        run(`rm $(deg_seq_filename)`) 
+    end
     G =  read_edgelist(out_filename)
     if delete_out && isfile(out_filename)
         run(`rm $(out_filename)`) 

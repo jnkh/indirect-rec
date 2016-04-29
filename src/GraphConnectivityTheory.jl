@@ -2,7 +2,7 @@ module GraphConnectivityTheory
 
 using LightGraphs, PyCall, Distributions
 
-export get_p_known_percolation_theory, intersection_length, choose
+export get_p_known_percolation_theory, percolation_erdos_renyi, intersection_length, choose
 
 function get_p_known_first_order(g::LightGraphs.Graph,e::Pair{Int,Int},p::Real)
     return get_p_known_first_order(get_num_mutual_neighbors(g,e),p)
@@ -124,6 +124,11 @@ function get_p_known_percolation_theory(n,p_edge,p)
     if p == p_edge == 1.0 return 1.0 end
     return p + (1-p)*(reliability - p_edge*p)/(1-p_edge*p)
 end
+
+function percolation_erdos_renyi(n::Int,p::Float64)
+    return convert(Float64,get_Tn_memoized(BigInt(n),BigFloat(p)))
+end
+
 
 #############  Utilities  ###############
 

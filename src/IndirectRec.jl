@@ -91,6 +91,7 @@ end
 function get_p_known_percolation(g::LightGraphs.Graph,p::Real,num_trials = 100)
     p_knowns = zeros(size(LightGraphs.vertices(g)))
     singletons = get_singleton_nodes_array(g)
+    println(num_trials)
     for i in 1:num_trials
         h = sample_graph_edges(g,p)
         components = get_components(h::LightGraphs.Graph)
