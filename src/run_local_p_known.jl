@@ -5,7 +5,7 @@ using PyCall, Distributions,JLD,LightGraphs
 
 ##facebook: N = 4040, k = 44
 N = 4040#1000
-p = 0.1
+p = 0.05
 num_trials = 1 #100
 num_trials_perc = 200
 graph_type_range = [:fb,:fb_bter,:watts_strogatz,:fb_gamma,:fb_normal,:gamma_fb]#[:erdos_renyi,:watts_strogatz,:powerlaw_cluster,:fb]

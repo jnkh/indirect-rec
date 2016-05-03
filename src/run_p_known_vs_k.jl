@@ -3,9 +3,9 @@ using LightGraphs, IndirectRec, GraphConnectivityTheory,GraphCreation
 using PyCall, Distributions, JLD
 
 N = 400
-p = 0.2
+p = 0.1
 num_trials = 10
-num_trials_perc = 100
+num_trials_perc = 200
 graph_type_range = [:watts_strogatz,:gamma_fb]#[:erdos_renyi,:watts_strogatz,:powerlaw_cluster, :gamma_fb]
 graph_name_range = ["watts_strogatz", "gamma_fb"]#["erdos renyi", "watts strogatz", "powerlaw cluster", "gamma fb"]
 n_range = [1,2,3,5,7,100]

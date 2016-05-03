@@ -4,15 +4,15 @@ using PyCall, Distributions,JLD,LightGraphs
 
 
 ##facebook: N = 4040, k = 44
-p = 0.1
+p = 0.05
 num_trials = 1 #100
 num_trials_perc = 200
 graph_type_range = [:erdos_renyi, :watts_strogatz, :gamma_fb]#[:erdos_renyi,:watts_strogatz,:powerlaw_cluster,:fb]
 graph_name_range = ["erdos_renyi", "watts_strogatz", "gamma_fb"]#["erdos renyi", "watts strogatz", "powerlaw cluster", "facebook"]
-N_range = [100,200,500] 
+N_range = [200,500,1000] 
 C_range = [0.01,0.2,0.5,0.7] 
-k_range = [5,10,30] 
-n_range = [2,3,4,5,7,100]
+k_range = [5,10,30,50] 
+n_range = [2,3,4,5,7,100,1000]
 
 #histogram data
 hist_all_degrees = Array(Array{Any,1},(length(n_range),length(graph_type_range),length(N_range),length(C_range),length(k_range)))
