@@ -10,7 +10,7 @@ num_trials_perc = 200
 graph_type_range = [:erdos_renyi, :watts_strogatz, :gamma_fb]#[:erdos_renyi,:watts_strogatz,:powerlaw_cluster,:fb]
 graph_name_range = ["erdos_renyi", "watts_strogatz", "gamma_fb"]#["erdos renyi", "watts strogatz", "powerlaw cluster", "facebook"]
 N_range = [200,500,1000] 
-C_range = [0.01,0.2,0.5,0.7] 
+C_range = [0.01:0.05:0.7]#[0.01,0.2,0.5,0.7] 
 k_range = [5,10,30,50] 
 n_range = [2,3,4,5,7,100,1000]
 
