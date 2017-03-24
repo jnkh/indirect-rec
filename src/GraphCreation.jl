@@ -5,7 +5,7 @@ using RandomClusteringGraph
 
 export create_graph, networkx_to_lightgraph, read_edgelist, read_edgelist_julia
 
-function create_graph(N,k,graph_type=:erdos_renyi,clustering=0.6)
+function create_graph(N,k,graph_type=:erdos_renyi,clustering=0.6;deg_distr=nothing)
     p_edge = k/(N-1)
     if graph_type == :erdos_renyi
         g = LightGraphs.erdos_renyi(N,p_edge)
@@ -25,6 +25,11 @@ function create_graph(N,k,graph_type=:erdos_renyi,clustering=0.6)
         g = read_edgelist("../data/graphs/bter_fit_facebook.dat")
     elseif graph_type == :gamma_fb
         g = random_clustering_graph(Gamma(1.0,k),N,clustering)
+    elseif graph_type == :rand_clust
+        if deg_distr == nothing
+            deg_distr = Gamma(1.0,k)
+        end
+        g = random_clustering_graph(deg_distr,N,clustering)
     else
         error("invalid graph type")
     end
