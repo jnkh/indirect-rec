@@ -2,7 +2,7 @@ module CliquePercolation
 
 using IndirectRec, GraphConnectivityTheory, LightGraphs, PyCall, Distributions
 
-export get_p_known_clique_percolation, get_p_known_clique_theory,
+export get_p_known_clique_percolation, get_p_known_clique_theory, get_p_known_clique_neighbor_to_neighbor_theory,
 produce_clique_graph,
 get_p_known_from_neighbor_to_other_neighbor
 
