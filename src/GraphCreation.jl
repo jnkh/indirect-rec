@@ -15,6 +15,8 @@ function create_graph(N,k,graph_type=:erdos_renyi,clustering=0.6;deg_distr=nothi
         g = LightGraphs.random_regular_graph(N,Int(round(k)))
     elseif graph_type == :powerlaw_cluster
         g = powerlaw_cluster_graph(N,Int(round(0.5*(N-1)*p_edge)),1.0)
+    elseif graph_type == :geometric_gauss
+        g,_,_ = generate_gaussian_graph(N,k)
     elseif graph_type == :fb
         g = read_edgelist("../data/graphs/facebook_combined.txt")
     elseif graph_type == :fb_gamma
@@ -37,6 +39,62 @@ function create_graph(N,k,graph_type=:erdos_renyi,clustering=0.6;deg_distr=nothi
 end
 
 
+###RANDOM GEOMETRIC GRAPH
+function getGaussianConstant(n,s,k)
+    return ((pi/k)*(n/(s*s)))
+end
+
+function periodic_distance(locx,locy,i,j,length)
+    dx = periodic_dist_one_dim(locx[i],locx[j],length)
+    dy = periodic_dist_one_dim(locy[i],locy[j],length)
+    return sqrt(dx^2 + dy^2)
+end
+
+
+    
+function periodic_dist_one_dim(x1,x2,length)
+    d = abs(x1-x2)
+    return min(d,length-d)
+end
+
+function checkEdge!(g,i,j,a,locx,locy,length)
+    #d = distance([locx[i],locy[i]],[locx[j],locy[j]],length)
+    d = periodic_distance(locx,locy,i,j,length)
+    gaussianProbability = e^(-a*d^2)
+    r = rand()
+    if (r<gaussianProbability)
+            add_edge!(g,i,j)
+            return true
+            #println("d=($d),  probability=$gaussianProbability, r = $r   Edge added")
+    end
+    return false
+end   
+
+function generate_gaussian_graph(N,k,locx=nothing,locy=nothing)
+    GRAPH_LOCATION_SIZE = 1
+    if locx == nothing || locy == nothing
+        locx = rand(N)*GRAPH_LOCATION_SIZE;
+        locy = rand(N)*GRAPH_LOCATION_SIZE;
+    end
+
+    g = Graph(N)
+    alpha = getGaussianConstant(N,GRAPH_LOCATION_SIZE,k)
+    println("length scale: $(1/sqrt(alpha))")
+    for i in LightGraphs.vertices(g)
+        for j in LightGraphs.vertices(g)
+            if j > i
+                checkEdge!(g,i,j,alpha,locx,locy,GRAPH_LOCATION_SIZE)
+            end
+        end
+    end
+    #k_meas = mean(degree(g))
+    #c_meas = mean(local_clustering_coefficient(g))
+    #println("degree = $(k_meas), clustering = $(c_meas)")
+    return g,locx,locy
+end
+
+
+###WATTS_STROGATZ###
 function watts_strogatz_get_clustering(N,K,beta)
     c1,c0 = watts_strogatz_clustering_limits(N,K)
     return c1 + (c0-c1)*(1-beta)^3
@@ -61,6 +119,7 @@ function watts_strogatz_with_custering(N,K,C)
     return LightGraphs.watts_strogatz(N,K,beta)
 end
 
+###NETWORKX###
 @pyimport networkx as nx
 function networkx_to_lightgraph(G)
     g = LightGraphs.Graph(length(nx.nodes(G)))

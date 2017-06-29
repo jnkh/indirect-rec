@@ -2,7 +2,7 @@ module CliquePercolation
 
 using IndirectRec, GraphConnectivityTheory, LightGraphs, PyCall, Distributions
 
-export get_p_known_clique_percolation, get_p_known_clique_theory,
+export get_p_known_clique_percolation, get_p_known_clique_theory, get_p_known_clique_neighbor_to_neighbor_theory,
 produce_clique_graph,
 get_p_known_from_neighbor_to_other_neighbor,
 get_p_known_from_all_neighbors_to_other_neighbor
@@ -132,6 +132,38 @@ function get_p_known_clique_theory_approx(k::Int,c::Float64,p::Float64)
     return 1 - curr
 end 
 
+function get_p_known_clique_neighbor_to_neighbor_theory(k::Int,c::Float64,n::Int,p::Float64)
+    #n = get_num_mutual_neighbors(g,Pair(v,w))
+    #k = degree(g,v)
+    if k == 1
+        return 0
+    elseif k == 2
+        if n > 0
+            return p
+        else
+            return 0
+        end
+    end
+        
+    c1 = (c*(k*(k-1))/2-n)/((k-1)*(k-2)/2)
+    return Float64(get_p_known_clique_theory(k-1,c1*(k-1)/n,n/(k-1)*p))
+end
+
+function get_p_known_clique_neighbor_to_neighbor_reliability_theory(k::Int,c::Float64,p::Float64)
+    #n = get_num_mutual_neighbors(g,Pair(v,w))
+    #k = degree(g,v)
+    if k == 1
+        return 0
+    elseif k == 2
+        if n > 0
+            return p
+        else
+            return 0
+        end
+    end
+
+    return Float64(GraphConnectivityTheory.get_Tn_memoized(BigInt(k),BigFloat(p*c)))
+end
 
 #### TODO TEST
 ####This quantity is not symmetric!
@@ -151,6 +183,7 @@ function get_p_known_from_neighbor_to_other_neighbor(g::LightGraphs.Graph,p::Rea
     return p_known/num_trials
 end
 
+
 function get_p_known_from_all_neighbors_to_other_neighbor(g::LightGraphs.Graph,p::Real,v::Int,num_trials = 100)
     p_known = 0
     all_neighbors = LightGraphs.neighbors(g,v)
@@ -167,3 +200,4 @@ function get_p_known_from_all_neighbors_to_other_neighbor(g::LightGraphs.Graph,p
 end
 
 end
+
