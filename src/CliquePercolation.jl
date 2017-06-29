@@ -2,10 +2,14 @@ module CliquePercolation
 
 using IndirectRec, GraphConnectivityTheory, LightGraphs, PyCall, Distributions
 
-export get_p_known_clique_percolation, get_p_known_clique_theory, get_p_known_clique_neighbor_to_neighbor_theory,
+export get_p_known_clique_percolation,
+get_p_known_clique_theory,
+get_p_known_clique_neighbor_to_neighbor_theory,
+get_p_known_clique_neighbor_to_neighbor_reliability_theory,
 produce_clique_graph,
 get_p_known_from_neighbor_to_other_neighbor,
 get_p_known_from_all_neighbors_to_other_neighbor
+
 
 function get_p_known_clique_percolation(g::LightGraphs.Graph,p::Real,num_trials = 100)
     p_knowns = zeros(size(LightGraphs.vertices(g)))
@@ -135,18 +139,26 @@ end
 function get_p_known_clique_neighbor_to_neighbor_theory(k::Int,c::Float64,n::Int,p::Float64)
     #n = get_num_mutual_neighbors(g,Pair(v,w))
     #k = degree(g,v)
+    if n == 0
+        return 0.0
+    end
+
     if k == 1
         return 0
     elseif k == 2
         if n > 0
             return p
         else
-            return 0
+            return 0.0
         end
     end
         
     c1 = (c*(k*(k-1))/2-n)/((k-1)*(k-2)/2)
-    return Float64(get_p_known_clique_theory(k-1,c1*(k-1)/n,n/(k-1)*p))
+    ret = Float64(get_p_known_clique_theory(k-1,c1*(k-1)/n,n/(k-1)*p))
+    if isnan(ret)
+        println("NAN: k = $k, c = $c, n = $n")
+    end
+    return ret
 end
 
 function get_p_known_clique_neighbor_to_neighbor_reliability_theory(k::Int,c::Float64,p::Float64)
@@ -154,13 +166,14 @@ function get_p_known_clique_neighbor_to_neighbor_reliability_theory(k::Int,c::Fl
     #k = degree(g,v)
     if k == 1
         return 0
-    elseif k == 2
-        if n > 0
-            return p
-        else
-            return 0
-        end
     end
+    # elseif k == 2
+    #     if n > 0
+    #         return p
+    #     else
+    #         return 0
+    #     end
+    # end
 
     return Float64(GraphConnectivityTheory.get_Tn_memoized(BigInt(k),BigFloat(p*c)))
 end
