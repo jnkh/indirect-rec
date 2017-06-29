@@ -4,8 +4,8 @@ using IndirectRec, GraphConnectivityTheory, LightGraphs, PyCall, Distributions
 
 export get_p_known_clique_percolation, get_p_known_clique_theory,
 produce_clique_graph,
-get_p_known_from_neighbor_to_other_neighbor
-
+get_p_known_from_neighbor_to_other_neighbor,
+get_p_known_from_all_neighbors_to_other_neighbor
 
 function get_p_known_clique_percolation(g::LightGraphs.Graph,p::Real,num_trials = 100)
     p_knowns = zeros(size(LightGraphs.vertices(g)))
@@ -67,6 +67,29 @@ function get_p_known_given_components(components::IndirectRec.GraphComponents,v:
     end
     return p_known
 end
+
+function get_p_known_all_pairs_given_components(components::IndirectRec.GraphComponents,candidates::Array{Int,1})
+    p_known = 0
+    counts = 0
+    nc = length(candidates)
+    if nc > 0
+        for v in candidates
+            for w in candidates
+                if v != w
+                    if IndirectRec.nodes_in_same_component(v,w,components)
+                        p_known += 1.0
+                    end
+                    counts += 1.0
+                end
+            end
+        end
+    end
+    if counts > 0
+        return p_known/counts
+    else
+        return 0
+    end
+end
     
     
 
@@ -124,6 +147,21 @@ function get_p_known_from_neighbor_to_other_neighbor(g::LightGraphs.Graph,p::Rea
         h = IndirectRec.sample_graph_edges(clique,p)
         components = IndirectRec.get_components(h)
         p_known += get_p_known_given_components(components,w,vs_without_w)
+    end
+    return p_known/num_trials
+end
+
+function get_p_known_from_all_neighbors_to_other_neighbor(g::LightGraphs.Graph,p::Real,v::Int,num_trials = 100)
+    p_known = 0
+    all_neighbors = LightGraphs.neighbors(g,v)
+    clique,vmap = LightGraphs.induced_subgraph(g,all_neighbors)
+    vmap = reverse_vmap(vmap)
+    vs = collect(vertices(clique))
+    # vs_without_w = deleteat!(collect(vs), findin(vs, w))
+    for i in 1:num_trials
+        h = IndirectRec.sample_graph_edges(clique,p)
+        components = IndirectRec.get_components(h)
+        p_known += get_p_known_all_pairs_given_components(components,vs)
     end
     return p_known/num_trials
 end

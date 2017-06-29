@@ -3,7 +3,8 @@ module GraphConnectivityTheory
 using LightGraphs, PyCall, Distributions
 
 export get_p_known_percolation_theory, percolation_erdos_renyi,
- intersection_length, choose, get_Tn_memoized
+ intersection_length, choose, get_Tn_memoized,
+ get_p_known_first_order
 
 function get_p_known_first_order(g::LightGraphs.Graph,e::Pair{Int,Int},p::Real)
     return get_p_known_first_order(get_num_mutual_neighbors(g,e),p)
