@@ -3,7 +3,9 @@ module GraphCreation
 using PyCall, LightGraphs, Distributions
 using RandomClusteringGraph
 
-export create_graph, networkx_to_lightgraph, read_edgelist, read_edgelist_julia
+export create_graph, networkx_to_lightgraph,
+ read_edgelist, read_edgelist_julia,
+ generate_gaussian_graph
 
 function create_graph(N,k,graph_type=:erdos_renyi,clustering=0.6;deg_distr=nothing)
     p_edge = k/(N-1)

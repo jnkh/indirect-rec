@@ -8,7 +8,22 @@ get_p_known_clique_neighbor_to_neighbor_theory,
 get_p_known_clique_neighbor_to_neighbor_reliability_theory,
 produce_clique_graph,
 get_p_known_from_neighbor_to_other_neighbor,
-get_p_known_from_all_neighbors_to_other_neighbor
+get_p_known_from_all_neighbors_to_other_neighbor,
+edgewise_critical_b_c
+
+
+#critical b-c ratio as seen by a given node of degree k considering whether to defect with one of its neighbors
+#if this is larger than the actual b/c ratio, then the node defects.
+function edgewise_critical_b_c(rho_prime,k,P_neighbor_known)
+    if k == 1
+        return rho_prime/(rho_prime-1)
+    elseif k == 0
+        return 0
+    elseif k > 1
+        return (rho_prime*(k-1))/(P_neighbor_known*(k-1)+1)
+    end
+end
+
 
 
 function get_p_known_clique_percolation(g::LightGraphs.Graph,p::Real,num_trials = 100)
@@ -19,7 +34,7 @@ function get_p_known_clique_percolation(g::LightGraphs.Graph,p::Real,num_trials 
         p_knowns += get_p_known_clique(g,h)
     end
     p_knowns /= num_trials
-    return p_knowns,mean(p_knowns[!singletons])
+    return p_knowns,mean(p_knowns[.!singletons])
 end
 
 

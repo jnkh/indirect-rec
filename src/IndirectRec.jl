@@ -5,9 +5,9 @@ using LightGraphs, PyCall, Distributions, GraphConnectivityTheory
 export get_p_known_percolation, get_num_mutual_neighbors, get_mean_p_known_for_node
 
 
-function get_num_mutual_neighbors(g::LightGraphs.Graph,e::Pair{Int,Int})
-    v1 = e[1]
-    v2 = e[2]
+function get_num_mutual_neighbors(g::LightGraphs.Graph,e::Edge)
+    v1 = e.src
+    v2 = e.dst
     neighbors1 = LightGraphs.neighbors(g,v1)
     neighbors2 = LightGraphs.neighbors(g,v2)
     num_mutual_neighbors = intersection_length(neighbors1,neighbors2)
@@ -136,7 +136,7 @@ end
 
 
 function get_singleton_nodes_array(g::LightGraphs.Graph)
-    singletons = Array(Bool,size(LightGraphs.vertices(g)))
+    singletons = Array{Bool}(size(LightGraphs.vertices(g)))
     for v in LightGraphs.vertices(g)
         if length(LightGraphs.neighbors(g,v)) == 0
             singletons[v] = true
