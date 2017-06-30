@@ -38,7 +38,7 @@ function rgb_to_rgba(val,alpha)
     ret = RGBA(val.r,val.g,val.b,alpha)
 end
 
-function get_edge_colors(g,cm,alpha,rho_prime = 0.5)
+function get_edge_colors(g,p,cm,alpha,rho_prime = 0.5)
     trials = 100
     ps = Float64[]
     ps_th = Float64[]
@@ -80,7 +80,7 @@ function plot_graph_colored_by_p_sim(g,locx,locy,p,trials=400,alpha=0.5)
     NODESIZE = 0.05
     edgecolor = RGBA(0.0,0.0,0.0,0.3)
 
-    edgec,edgecth = get_edge_colors(g,cm,1.0);
+    edgec,edgecth = get_edge_colors(g,p,cm,1.0);
     gplot(g,locx,locy,nodesize=1+ns,nodefillc=cols,
     NODESIZE=NODESIZE,nodestrokec=colorant"black",
     nodestrokelw=2,edgestrokec=edgec)#,nodelabel=ks)
@@ -98,7 +98,7 @@ function plot_graph_colored_by_p_th(g,locx,locy,p,trials=400,alpha=0.5)
     NODESIZE = 0.05
     edgecolor = RGBA(0.0,0.0,0.0,0.3)
 
-    edgec,edgecth = get_edge_colors(g,cm,1.0);
+    edgec,edgecth = get_edge_colors(g,p,cm,1.0);
     gplot(g,locx,locy,nodesize=1+ns,nodefillc=cols_th,
     NODESIZE=NODESIZE,nodestrokec=colorant"black",
     nodestrokelw=2,edgestrokec=edgecth)#,nodelabel=ks)
