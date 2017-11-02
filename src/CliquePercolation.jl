@@ -9,7 +9,9 @@ get_p_known_clique_neighbor_to_neighbor_reliability_theory,
 produce_clique_graph,
 get_p_known_from_neighbor_to_other_neighbor,
 get_p_known_from_all_neighbors_to_other_neighbor,
-edgewise_critical_b_c
+edgewise_critical_b_c,
+get_node_critical_thresh_theory,
+get_edge_critical_thresh_theory
 
 
 #critical b-c ratio as seen by a given node of degree k considering whether to defect with one of its neighbors
@@ -154,25 +156,28 @@ end
 function get_p_known_clique_neighbor_to_neighbor_theory(k::Int,c::Float64,n::Int,p::Float64)
     #n = get_num_mutual_neighbors(g,Pair(v,w))
     #k = degree(g,v)
-    if n == 0
-        return 0.0
+    P_other_neighbors = 0.0
+
+    # if n == 0
+    #     return 0.0
+    # end
+
+    # if k == 1
+    #     return 0
+    # elseif k == 2
+    #     if n > 0
+    #         return p
+    #     else
+    #         return 0.0
+    #     end
+    # end
+        
+    if n > 0
+        c1 = (c*(k*(k-1))/2-n)/((k-1)*(k-2)/2)
+        P_other_neighbors = Float64(get_p_known_clique_theory(k-1,c1*(k-1)/n,n/(k-1)*p))
     end
 
-    if k == 1
-        return 0
-    elseif k == 2
-        if n > 0
-            return p
-        else
-            return 0.0
-        end
-    end
-        
-    c1 = (c*(k*(k-1))/2-n)/((k-1)*(k-2)/2)
-    ret = Float64(get_p_known_clique_theory(k-1,c1*(k-1)/n,n/(k-1)*p))
-    if isnan(ret)
-        println("NAN: k = $k, c = $c, n = $n")
-    end
+    ret = p/k*(1 + (k-1)*P_other_neighbors)
     return ret
 end
 
@@ -202,11 +207,16 @@ function get_p_known_from_neighbor_to_other_neighbor(g::LightGraphs.Graph,p::Rea
     vmap = reverse_vmap(vmap)
     vs = vertices(clique)
     w = vmap[w]
-    vs_without_w = deleteat!(collect(vs), findin(vs, w))
+
+    add_vertex!(clique)
+    source_vertex = nv(clique)
+    add_edge!(clique,Edge(source_vertex,w)) #add back single vertex
+
+    # vs_without_w = deleteat!(collect(vs), findin(vs, w))
     for i in 1:num_trials
         h = IndirectRec.sample_graph_edges(clique,p)
         components = IndirectRec.get_components(h)
-        p_known += get_p_known_given_components(components,w,vs_without_w)
+        p_known += get_p_known_given_components(components,source_vertex,collect(vs))
     end
     return p_known/num_trials
 end
@@ -225,6 +235,24 @@ function get_p_known_from_all_neighbors_to_other_neighbor(g::LightGraphs.Graph,p
         p_known += get_p_known_all_pairs_given_components(components,vs)
     end
     return p_known/num_trials
+end
+
+
+
+function get_edge_critical_thresh_theory(g,v,w,p)
+    k = degree(g,v)
+    c = local_clustering_coefficient(g,v)
+    n = get_num_mutual_neighbors(g,Edge(v,w))
+    P_tilde_th = get_p_known_clique_neighbor_to_neighbor_theory(k,c,n,p)
+    ret = P_tilde_th
+    return k*ret
+end
+
+function get_node_critical_thresh_theory(g,v,p)
+    k = degree(g,v)
+    c = local_clustering_coefficient(g,v)
+    ret = Float64(get_p_known_clique_theory(k,c,p))
+    return ret
 end
 
 end

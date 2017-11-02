@@ -1,9 +1,34 @@
 module IndirectRec
 
-using LightGraphs, PyCall, Distributions, GraphConnectivityTheory
+using LightGraphs, PyCall, Distributions, GraphConnectivityTheory, Combinatorics
 
-export get_p_known_percolation, get_num_mutual_neighbors, get_mean_p_known_for_node
+export get_p_known_percolation, get_num_mutual_neighbors, get_mean_p_known_for_node, 
+get_components, get_connected_component,get_binomial_error,embeddedness,get_p_known_exact
 
+
+function graph_from_edges(edges,num_nodes)
+    g = Graph(num_nodes)
+    for e in edges
+        add_edge!(g,e)
+    end
+    return g
+end
+    
+function get_p_known_exact(g,v,p)
+    all_edges = copy(collect(LightGraphs.edges(g)))
+    num_edges_total = ne(g)
+    num_nodes_total = nv(g)
+    println("Checking $(2^num_edges_total) combinations.")
+    tot = 0
+    for num_edges = 0:num_edges_total
+        fac = p^num_edges*(1-p)^(num_edges_total-num_edges)
+        for edges_curr in combinations(all_edges,num_edges)
+            h = graph_from_edges(edges_curr,num_nodes_total)
+            tot += fac*(length(get_connected_component(h,v))-1)
+        end
+    end
+    return tot/(num_nodes_total-1)
+end
 
 function get_num_mutual_neighbors(g::LightGraphs.Graph,e::Edge)
     v1 = e.src
@@ -50,7 +75,7 @@ end
 
 ###########################Monte Carlo Calculation of p_known##########################3
 
-typealias GraphComponents Array{Set{Int}}
+const GraphComponents = Array{Set{Int}}
 
 function get_components(g::LightGraphs.Graph)
     components::GraphComponents = []
@@ -86,6 +111,8 @@ function components_contain(components::GraphComponents,v::Int)
     end
     return false
 end
+
+
 
 
 function get_p_known_percolation(g::LightGraphs.Graph,p::Real,num_trials = 100)
@@ -180,7 +207,7 @@ function get_p_known_percolation(g::LightGraphs.Graph,p::Real,max_order::Int,num
         p_knowns += get_p_known_given_components(g,components,dists,max_order)
     end
     p_knowns /= num_trials
-    return p_knowns,mean(p_knowns[!singletons])
+    return p_knowns,mean(p_knowns[.!singletons])
 end
 
 function dijkstra_all_sources_shortest_paths(g::LightGraphs.Graph)
@@ -218,6 +245,13 @@ function get_p_known_percolation(g::LightGraphs.Graph,e::Pair{Int,Int},p::Real,n
     return connecteds/num_trials
 end
 
+function get_binomial_error(p_est,n_samples)
+    return sqrt(p_est*(1-p_est)/n_samples)
+end
+
+function embeddedness(g)
+    (degree(g)-1).*local_clustering_coefficient(g)
+end
 
 
 
