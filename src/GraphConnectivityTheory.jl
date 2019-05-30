@@ -76,7 +76,7 @@ end
 ###########################Reliability function calculation of p_known#########################
 
 function memoize_An(n::BigInt,p::BigFloat)
-    Ans = Array{BigFloat}(n)
+    Ans = zeros(BigFloat,n)
     Ans[1] = 1
     for n_curr = 2:n
         term::BigFloat = 0

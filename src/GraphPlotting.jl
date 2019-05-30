@@ -4,11 +4,16 @@ using Colors, StatsBase, GraphPlot
 using LightGraphs, IndirectRec, GraphConnectivityTheory,GraphCreation
 using PyCall, PyPlot, Distributions
 using CliquePercolation
+import Printf
 
 export plot_graph_colored_by_p_th, plot_graph_colored_by_p_sim,
-plot_P_graph,plot_graph
+plot_P_graph,plot_graph,binomial_error
 
 using StatsBase, Colors
+
+function binomial_error(p,n_trials)
+    return (p.*(1-p)./n_trials).^0.5
+end
 
 function scale_to_indices(arr,color_range=nothing)
     if color_range == nothing
@@ -119,7 +124,7 @@ end
 function plot_P_graph(g,p,N;color_range=[0.0,1.0],color_range_edge=nothing,
     edge_color="grey",cm="inferno",as_neighborhood=false,
     lw=2,fac=10.0,num_trials=1000,show_colorbar=true,edge_alpha=1.0,
-    alpha=1.0,log_scaling=true,layout_fn=nothing,theory=true)
+    alpha=1.0,log_scaling=true,layout_fn=nothing,theory=true,exact=false)
 #     locx,locy = random_layout(g)
     #     p_knowns = get_p_known_percolation(g,p,N,num_trials)[1]
     if layout_fn == nothing
@@ -134,10 +139,15 @@ function plot_P_graph(g,p,N;color_range=[0.0,1.0],color_range_edge=nothing,
         v = nv(g)
         p_knowns = Float64[]
         for w in vertices(g)[1:end-1]
-            if !theory
-                t = degree(g,v)*get_p_known_from_neighbor_to_other_neighbor(g,p,v,w,num_trials)
+            if exact
+                q = p
+                t = degree(g,v)*get_p_known_edge_exact_neighborhood_graph(g,v,w,p,q)
             else
-                t = get_edge_critical_thresh_theory(g,v,w,p)
+                if !theory
+                    t = degree(g,v)*get_p_known_from_neighbor_to_other_neighbor(g,p,v,w,num_trials)
+                else
+                    t = get_edge_critical_thresh_theory(g,v,w,p)
+                end
             end
 #             t2 = get_edge_critical_thresh_theory(g,w,v,p)
 #             t = min(t1,t2)
@@ -154,7 +164,7 @@ function plot_P_graph(g,p,N;color_range=[0.0,1.0],color_range_edge=nothing,
     ks = degree(g)
     cs = local_clustering_coefficient(g)
     ns = (ks-1).*cs
-    println("P: $(@sprintf("%.3f",minimum(p_knowns))), $(@sprintf("%.3f",mean(p_knowns))), $(@sprintf("%.3f",maximum(p_knowns)))")
+    println("P: $(Printf.@sprintf("%.3f",minimum(p_knowns))), $(Printf.@sprintf("%.3f",mean(p_knowns))), $(Printf.@sprintf("%.3f",maximum(p_knowns)))")
     if color_range == nothing
         vmin = minimum(p_knowns)
         vmax = maximum(p_knowns)
@@ -171,24 +181,31 @@ function plot_P_graph(g,p,N;color_range=[0.0,1.0],color_range_edge=nothing,
     
     edge_pos = [((locx[e.src],locy[e.src]),(locx[e.dst],locy[e.dst])) for e in edges(g)]
     P_tildes = Float64[]
+    arrows = []
     for (i,e) in enumerate(edges(g))
         t1 = get_edge_critical_thresh_theory(g,e.src,e.dst,p)
         t2 = get_edge_critical_thresh_theory(g,e.dst,e.src,p)
+        a1 = get_fancy_arrow(e,locx,locy,lw,t1,alpha)
+        a2 = get_fancy_arrow(swap_edge(e),locx,locy,lw,t2,alpha)
         t = min(t1,t2)
+        push!(arrows,a1)
+        push!(arrows,a2)
         push!(P_tildes,t)
+        push!(arrows,a)
     end
     if(log_scaling)
         P_tildes = log10(P_tildes - p+1e-2)
     end
-    println("P_tilde: $(@sprintf("%.3f",minimum(P_tildes))), $(@sprintf("%.3f",mean(P_tildes))), $(@sprintf("%.3f",maximum(P_tildes)))")
+    println("P_tilde: $(Printf.@sprintf("%.3f",minimum(P_tildes))), $(Printf.@sprintf("%.3f",mean(P_tildes))), $(Printf.@sprintf("%.3f",maximum(P_tildes)))")
+    edge_collection = matplotlib[:collections][:PatchCollection]
         
-    edge_collection = matplotlib[:collections][:LineCollection](edge_pos,alpha=edge_alpha,
-    colors=edge_color,linewidths=lw,antialiaseds=(1,),linestyle="-")
+    # edge_collection = matplotlib[:collections][:LineCollection](edge_pos,alpha=edge_alpha,
+    # colors=edge_color,linewidths=lw,antialiaseds=(1,),linestyle="-")
     edge_collection[:set_zorder](0)  # edges go behind nodes
     if !as_neighborhood
-        edge_collection[:set_array](P_tildes)
+        # edge_collection[:set_array](P_tildes)
     else
-        title(latexstring("\$P = $(@sprintf("%.4f",p_known_tot)) \\pm $(@sprintf("%.4f",p_known_error))\$"))
+        title(latexstring("\$P = $(Printf.@sprintf("%.4f",p_known_tot)) \\pm $(Printf.@sprintf("%.4f",p_known_error))\$"))
     end
     edge_collection[:set_cmap](cm)
     if color_range_edge == nothing
@@ -205,6 +222,20 @@ function plot_P_graph(g,p,N;color_range=[0.0,1.0],color_range_edge=nothing,
     ylim([-1.0*zoom,1.0*zoom])
     axis("off")
 end
+
+function swap_edge(e::Edge)
+    return Edge(e.dst,e.src)
+end
+
+
+function get_fancy_arrow(e::Edge,locx,locy,lw,color,alpha)
+    a = FancyArrow(locx[e.src], locy[e.src], locx[e.dst]-locx[e.src], locy[e.dst]-locy[e.src],
+        width=lw,facecolor=color,alpha=edge_alpha,
+        zorder=0,edgecolor="none",shape="right")
+    # head_length=head_length,head_width=head_width,length_includes_head=length_includes_head,linewidth=lw,offset=offset,
+    return a
+end
+
 
 
 function plot_graph(g,N;node_color="grey",edge_color="grey"

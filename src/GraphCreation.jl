@@ -1,16 +1,19 @@
 module GraphCreation
 
-using PyCall, LightGraphs, Distributions,StatsBase,CliquePercolation
+using Random,PyCall, LightGraphs, Distributions,StatsBase,CliquePercolation
 using RandomClusteringGraph, IndirectRec
+import DelimitedFiles
 
 export create_graph, networkx_to_lightgraph,
  read_edgelist, read_edgelist_julia,
  generate_gaussian_graph,add_complete_vertex,
- build_graph,produce_clique_graph_ring,GenCache,
+ build_graph,build_graph_watts_strogatz,produce_clique_graph_ring,GenCache,
  generate_trust_graph,generate_trust_graph_old,
- subsample_graph
+ subsample_graph,sample_connected_subgraph,
+ sample_subgraph_by_community_given_k,
+ subsample_from_communities
 
-function create_graph(N,k,graph_type=:erdos_renyi,clustering=0.6;deg_distr=nothing)
+function create_graph(N,k,graph_type=:erdos_renyi,clustering=0.5;deg_distr=nothing)
     p_edge = k/(N-1)
     if graph_type == :erdos_renyi
         g = LightGraphs.erdos_renyi(N,p_edge)
@@ -37,6 +40,10 @@ function create_graph(N,k,graph_type=:erdos_renyi,clustering=0.6;deg_distr=nothi
             deg_distr = Gamma(1.0,k)
         end
         g = random_clustering_graph(deg_distr,N,clustering)
+    elseif graph_type in [:ff,:ffg,:k,:P,:Psim,:n]
+        cache= GenCache(Dict{Tuple{Int,Float64,Int,Float64},Float64}())
+        p = 0.1
+        return build_graph(k/2.0,N,p,cache,[1],graph_type,nothing,C=clustering)[1]
     else
         error("invalid graph type")
     end
@@ -85,7 +92,7 @@ end
 function checkEdge!(g,i,j,a,locx,locy,length)
     #d = distance([locx[i],locy[i]],[locx[j],locy[j]],length)
     d = periodic_distance(locx,locy,i,j,length)
-    gaussianProbability = e^(-a*d^2)
+    gaussianProbability = exp(-a*d^2)
     r = rand()
     if (r<gaussianProbability)
             add_edge!(g,i,j)
@@ -145,7 +152,7 @@ function watts_strogatz_with_custering(N,K,C)
 end
 
 ###NETWORKX###
-@pyimport networkx as nx
+nx = pyimport("networkx")
 function networkx_to_lightgraph(G)
     g = LightGraphs.Graph(length(nx.nodes(G)))
     nx_nodes = convert(Array{Int,1},nx.nodes(G))
@@ -183,7 +190,7 @@ function make_networkx_graph_from_lightgraph(G::LightGraphs.Graph)
 end
 
 function read_edgelist(filename)
-    curr_edges = readdlm(filename,Int)
+    curr_edges = DelimitedFiles.readdlm(filename,Int)
     curr_nodes = unique(curr_edges)
     g = LightGraphs.Graph(length(curr_nodes))
     to_lg = get_mapping(curr_nodes)
@@ -198,25 +205,62 @@ function read_edgelist_nx(filename)
     return networkx_to_lightgraph(G)
 end
 
+function build_graph_watts_strogatz(N,m,C,log_points)
+    k = 2*m
+    C_vs_N = Float64[]
+    L_vs_N = Float64[]
+    g_curr = nothing
+    for N_curr = log_points
+        @assert(N_curr*k % 2 == 0)
+        g_curr = create_graph(N_curr,k,:watts_strogatz,C)
+        push!(C_vs_N,mean(local_clustering_coefficient(g_curr)))
+        push!(L_vs_N,sum(floyd_warshall_shortest_paths(g_curr).dists)/(N_curr*(N_curr-1)))
+    end
+    return g_curr,C_vs_N,L_vs_N
+end
 
+function build_graph_fb(N,m,C,log_points)
+    k = 2*m
+    C_vs_N = Float64[]
+    L_vs_N = Float64[]
+    g_curr = nothing
+    g_orig = create_graph(N,k,:fb,C)
+    for N_curr = log_points
+        @assert(N_curr*k % 2 == 0)
+        g_curr = subsample_from_communities(g_orig,N_curr,k)
+        push!(C_vs_N,mean(local_clustering_coefficient(g_curr)))
+        push!(L_vs_N,sum(floyd_warshall_shortest_paths(g_curr).dists)/(N_curr*(N_curr-1)))
+    end
+    return g_curr,C_vs_N,L_vs_N
+end
 
-function build_graph(m,N,p,cache,log_points=nothing,attachment_mode=:P,mu=nothing)
+function build_graph(m,N,p,cache,log_points=nothing,attachment_mode=:P,mu=nothing;C=0.5,trials=100)
+    if attachment_mode == :ffg
+        return generate_trust_graph_geometric(N,m,log_points)
+    end
+    m = Int(round(m))
     if attachment_mode == :ff
         return generate_trust_graph(N,m,log_points)
     end
+
     g = Graph()
     C_vs_N = Float64[]
     L_vs_N = Float64[]
     if log_points != nothing
         ii = log_points
     else
-        ii = unique(Int64.(floor.(logspace(0,log10(N),20))))
+        ii = unique(Int64.(floor.(logspace(log10(2*m+1),log10(N),20))))
+    end
+    if attachment_mode == :watts_strogatz
+        return build_graph_watts_strogatz(N,m,C,ii)
+    elseif attachment_mode == :fb
+        return build_graph_fb(N,m,C,ii)
     end
     for i = 1:N
-        if i <= m
+        if i <= 2*m+1
             add_complete_vertex(g)
         else
-            add_sampled_vertex(g,m,p,cache,attachment_mode,mu)
+            add_sampled_vertex(g,m,p,cache,attachment_mode,mu,trials)
         end
         if i in ii
             push!(C_vs_N,mean(local_clustering_coefficient(g)))
@@ -242,16 +286,18 @@ function rewire_random_edge(g)
 end
     
 
-function add_sampled_vertex(g,m,p,cache,attachment_mode,mu)
+function add_sampled_vertex(g,m,p,cache,attachment_mode,mu,trials)
     old_vertices = collect(vertices(g))
-    assert(length(old_vertices) >= m)
+    @assert(length(old_vertices) >= m)
     add_vertex!(g)
     v = nv(g)
     for j = 1:m
         num_vertices = length(old_vertices)
 #         weights = ones(num_vertices)
-        if attachment_mode == :P 
-            weights = get_sample_weights(g,old_vertices,v,p,cache,mu)
+        if attachment_mode == :Psim 
+            weights = get_sample_weights(g,old_vertices,v,p,cache,mu,theory=false,num_trials=trials)
+        elseif attachment_mode == :P 
+            weights = get_sample_weights(g,old_vertices,v,p,cache,mu,theory=true,num_trials=trials)
         elseif attachment_mode == :n
             weights = get_sample_weights_approx(g,old_vertices,v,p,mu)
         elseif attachment_mode == :k
@@ -266,9 +312,9 @@ function add_sampled_vertex(g,m,p,cache,attachment_mode,mu)
             return
         end
         w = sample(old_vertices,Weights(weights))
-        assert(add_edge!(g,v,w))
+        @assert(add_edge!(g,v,w))
         idx = searchsorted(old_vertices,w)[1]
-        assert(old_vertices[idx] == w)
+        @assert(old_vertices[idx] == w)
         deleteat!(old_vertices,idx)
     end
 end
@@ -281,7 +327,7 @@ function get_sample_weights_approx(g,vs,v,p,mu_fn = nothing)
     weights = zeros(length(vs))
     trials = 100
     for (i,w) in enumerate(vs)
-        assert(add_edge!(g,v,w))
+        @assert(add_edge!(g,v,w))
         k = degree(g,w)
         
 #         c = local_clustering_coefficient(g,w)
@@ -301,29 +347,43 @@ function get_sample_weights_approx(g,vs,v,p,mu_fn = nothing)
     return weights
 end
 
-function get_sample_weights(g,vs,v,p,cache,mu_fn=nothing)
+function get_sample_weights(g,vs,v,p,cache,mu_fn=nothing;theory=true,num_trials=100)
     if mu_fn == nothing
         mu_fn = x -> x
     end
     weights = zeros(length(vs))
-    trials = 100
     for (i,w) in enumerate(vs)
-        assert(add_edge!(g,v,w))
+        @assert(add_edge!(g,v,w))
         k = degree(g,w)
         
         c = local_clustering_coefficient(g,w)
         n = get_num_mutual_neighbors(g,Edge(w,v))
-        P_tilde_th = get_p_known_clique_neighbor_to_neighbor_theory_fast(k,c,n,p,cache)
-#             P_tilde_th = get_p_known_clique_neighbor_to_neighbor_theory(k,c,n,p)
-        ret = P_tilde_th
-#         println(abs(P_tilde_th - P_tilde))#/P_tilde_th)
-        
+        if n > 0
+            if theory
+                if k > 150
+                    ret = get_audience(g,p,w,v,num_trials) #from w to v!
+                else
+                    ret = get_audience_theory_fast(k,c,n,p,cache)
+                end
+            else
+                ret = get_audience(g,p,w,v,num_trials) #from w to v!
+            end
+            # P_tilde_th = get_p_known_clique_neighbor_to_neighbor_theory_fast(k,c,n,p,cache)
+    #             P_tilde_th = get_p_known_clique_neighbor_to_neighbor_theory(k,c,n,p)
+            # ret = P_tilde_th
+    #         println(abs(P_tilde_th - P_tilde))#/P_tilde_th)
+            
 
-        assert((k*ret)-p >= -1e-12)
-#         println("total: $(abs(k*ret - p - p^2*n))")
+            if ret < -1e-12
+                println("nij value negative: $(k*ret - p)")
+                println("k: $k, c: $c, n: $n, p: $p")
+            end
 
-#         weights[i] = max(0,(k*ret)-p )^mu
-        weights[i] = mu_fn(max(0,(k*ret)-p ))
+    #         weights[i] = max(0,(k*ret)-p )^mu
+            weights[i] = mu_fn(max(0,ret))
+        else
+            weights[i] = 0.0
+        end
         rem_edge!(g,v,w)
     end
     if sum(weights) == 0
@@ -340,26 +400,38 @@ function get_uniform_sample_weights(g,vs,v,p)
 end
 
 
-type GenCache{K,V}
+struct GenCache{K,V}
     cache::Dict{K,V}
 end
 
-function GenCache{K,V}(d::Dict{K,V})
+function GenCache(d::Dict{K,V}) where {K,V}
     return GenCache{K,V}(d)
 end
     
 
-function set_value{K,V}(c::GenCache{K,V},x::K,y::V)
+function set_value(c::GenCache{K,V},x::K,y::V) where {K,V}
 #     println("recomputed $(x)")
     c.cache[x] = y 
 end
 
-function get_value{K,V}(c::GenCache{K,V},x::K)
+function get_value(c::GenCache{K,V},x::K) where {K,V}
     return c.cache[x]
 end
 
-function has_key{K,V}(c::GenCache{K,V},x::K)
+function has_key(c::GenCache{K,V},x::K) where {K,V}
     return haskey(c.cache,x)
+end
+
+function get_audience_theory_fast(k::Int,c::Float64,n::Int,p::Float64,cache::GenCache)
+    if has_key(cache,(k,c,n,p))
+        return get_value(cache,(k,c,n,p))
+    end
+    ret = get_audience_theory(k,c,n,p)
+    if ret < 0
+        println(P_other_neighbors)
+    end
+    set_value(cache,(k,c,n,p),ret)
+    return ret
 end
 
 
@@ -398,7 +470,9 @@ end
 
 
 
-function generate_trust_graph(N,m,log_points=nothing)
+function generate_trust_graph_geometric(N,m,log_points=nothing)
+    @assert(m > 1)
+    p = min(1.0,1.0/(m))
     #start with complete graph
     C_vs_N = Float64[]
     L_vs_N = Float64[]
@@ -413,14 +487,73 @@ function generate_trust_graph(N,m,log_points=nothing)
     weights = zeros(Int,N)
     #add a node
     for i = 1:N
-        if i <= m+1
+        if i <= 2*m+1
+            add_complete_vertex(g)
+        else
+            j = 0
+            add_vertex!(g)
+            new_v = N_curr+1
+            while true
+                if j == 0
+                    v = sample(1:N_curr,Weights(degree(g)[1:N_curr]))
+        #             v = sample(1:N_curr)
+                    @assert(add_edge!(g,N_curr+1,v))
+                else
+                #add other edges
+                    v = sample(neighbors(g,new_v))
+                    w = sample(neighbors(g,v))
+                    while w == new_v || !add_edge!(g,new_v,w) 
+                        v = sample(neighbors(g,new_v))
+                        w = sample(neighbors(g,v))
+                    end
+                end
+                j += 1
+                if rand() < p || j >= i-1
+                    break
+                end
+            end
+
+        end
+        N_curr += 1
+        if i in ii
+            push!(C_vs_N,mean(local_clustering_coefficient(g)))
+            push!(L_vs_N,sum(floyd_warshall_shortest_paths(g).dists)/(i*(i-1)))
+            # push!(L_vs_N,1.0)#sum(floyd_warshall_shortest_paths(g).dists)/(i*(i-1)))
+        end
+    end
+    
+
+    g,C_vs_N,L_vs_N
+    
+end
+
+
+
+
+function generate_trust_graph(N,m,log_points=nothing)
+    #start with complete graph
+    m = Int(round(m))
+    C_vs_N = Float64[]
+    L_vs_N = Float64[]
+    if log_points != nothing
+        ii = log_points
+    else
+        ii = unique(Int64.(floor.(logspace(0,log10(N),20))))
+    end
+    
+    g = Graph()
+    N_curr = 0
+    weights = zeros(Int,N)
+    #add a node
+    for i = 1:N
+        if i <= 2*m+1
             add_complete_vertex(g)
         else
             add_vertex!(g)
             new_v = N_curr+1
             v = sample(1:N_curr,Weights(degree(g)[1:N_curr]))
 #             v = sample(1:N_curr)
-            assert(add_edge!(g,N_curr+1,v))
+            @assert(add_edge!(g,N_curr+1,v))
             #add other edges
             for j = 2:m
                 v = sample(neighbors(g,new_v))
@@ -470,14 +603,14 @@ function generate_trust_graph_old(N,m,log_points=nothing)
             add_vertex!(g)
 #             v = sample(1:N_curr)
             v = sample(1:N_curr,Weights(degree(g)[1:N_curr]))
-            assert(add_edge!(g,N_curr+1,v))
+            @assert(add_edge!(g,N_curr+1,v))
             add_neighbors_to_array(weights,g,v)
             #add other edges
             for j = 2:m
                 v = sample(1:N_curr,Weights(weights[1:N_curr]))
-                assert(sum(weights[N_curr+1:end]) == 0)
-                assert(add_edge!(g,N_curr+1,v))
-                assert(v != N_curr+1)
+                @assert(sum(weights[N_curr+1:end]) == 0)
+                @assert(add_edge!(g,N_curr+1,v))
+                @assert(v != N_curr+1)
                 add_neighbors_to_array(weights,g,v)
                 weights[v] = 0
             end
@@ -510,6 +643,157 @@ end
        
 
 
+function get_connected_subgraph(g,verts)
+    gsub = induced_subgraph(g,verts)[1]
+    comp = connected_components(gsub)
+    comp = sort(comp,by=length)
+    return induced_subgraph(gsub,comp[end])[1]
+end
+
+function sample_connected_subgraph(g,n_target,tol,n_proposal,max_iters = 10)
+    n_curr = 0
+    gsub = g
+    iters = 0
+    while abs(n_curr - n_target) > tol
+        verts = sample(1:nv(g),n_proposal,replace=false)
+        # verts = mhrw(g,sample(1:nv(g)),n)
+        gsub = get_connected_subgraph(g,verts)
+        n_curr = nv(gsub)
+        iters += 1
+        println(n_curr)
+        if iters > max_iters
+            break
+        end
+    end
+    return gsub
+end
+
+function mhrw(g,v,n) #metropolis-hastings random walk
+    v_curr = v
+    verts = Set{Int64}([v_curr])
+    while length(verts) < n
+        kv = length(neighbors(g,v_curr))
+        w = sample(neighbors(g,v_curr))
+        kw = length(neighbors(g,w))
+        if rand() <= kv/kw
+            v_curr = w
+            push!(verts,v_curr)
+        end
+    end
+    collect(verts)
+end
+
+function find_closest(arr,N)
+    closest = arr[1]
+    idx = 1
+    for (i,el) in enumerate(arr)
+        if abs(el-N) < abs(closest-N)
+            closest = el
+            idx = i
+        end
+    end
+    return idx,closest
+end
+
+function remove_edges(g,k_target)
+    N = nv(g)
+    n_edges_target = Int(k_target*N/2)
+    n_edges_now = ne(g)
+    n_to_remove = n_edges_now-n_edges_target
+    if n_to_remove <= 0
+        return g
+    end
+    rand_edges = shuffle(collect(edges(g)))
+    for i = 1:n_to_remove
+        @assert(rem_edge!(g,rand_edges[i]))
+    end
+    return g
+end
+
+function remove_nodes(g,N_target)
+    N_curr = nv(g)
+    while N_curr > N_target
+        N_diff = Int(ceil((N_curr - N_target)/2))
+        to_remove = min(N_diff,Int(ceil(N_curr/2)))
+        # println(to_remove)
+        to_keep = N_curr-to_remove
+        nodes_to_keep = sample(1:N_curr,to_keep,replace=false)
+        g = induced_subgraph(g,nodes_to_keep)[1]
+        # println(nodes_to_remove)
+        # removed = rem_vertex!.(g,nodes_to_remove)
+        # println(removed)
+        @assert(nv(g) == to_keep)
+        g = get_largest_connected_component(g)
+        N_curr = nv(g)
+    end
+    return g
+end
+
+function get_largest_connected_component(g)
+    comp = sort(connected_components(g),by=length)[end]
+    return induced_subgraph(g,comp)[1]
+end
+    
+
+
+function find_closest_tol(arr,N,tol)
+    idx,closest = find_closest(arr,N)
+    indices = [idx]
+    for (i,el) in enumerate(arr)
+        if abs(el-N) < tol*N
+            push!(indices,i)
+        end
+    end
+    return indices
+end
+
+
+function sample_subgraph_by_community(g,N_target)
+    ls = label_propagation(g)[1]
+    sizes = counts(ls)
+    idx,closest = find_closest(counts(ls),N_target)
+    community = find(x -> x == idx,ls)
+    g_out = induced_subgraph(g,community)[1]
+    return g_out
+end
+
+function sample_subgraph_by_community_given_k(g,N_target,k,tol=0.2)
+    ls = label_propagation(g)[1]
+    sizes = counts(ls)
+    if maximum(sizes) < N_target 
+        return copy(g)
+    end
+    indices = find_closest_tol(counts(ls),N_target,tol)
+    println(size(indices))
+    gs = []
+    ks = []
+    for (i,idx) in enumerate(indices)
+        community = findall(x -> x == idx,ls)
+        g_out = induced_subgraph(g,community)[1]
+        push!(ks,mean(degree(g_out)))
+        push!(gs,g_out)
+    end
+    println(ks)
+    idx_closest,k_closest = find_closest(ks,k)
+    return gs[idx_closest]
+end
+
+function print_basic_stats(g)
+    N = nv(g)
+    k = mean(degree(g))
+    C = mean(local_clustering_coefficient(g))
+    println("N: $N, k: $k, C:$C")
+end
+
+
+function subsample_from_communities(g,N_target,k_target)
+    g_out = sample_subgraph_by_community_given_k(g,N_target,k_target,0.1)
+    g_out = remove_nodes(g_out,2*Int(round(N_target/2)))
+    g_out = remove_edges(g_out,k_target)
+    g_out = get_largest_connected_component(g_out)
+    print_basic_stats(g_out)
+    return g_out
+end
 
 
 

@@ -2,8 +2,16 @@ module IndirectRec
 
 using LightGraphs, PyCall, Distributions, GraphConnectivityTheory, Combinatorics
 
-export get_p_known_percolation, get_num_mutual_neighbors, get_mean_p_known_for_node, 
-get_components, get_connected_component,get_binomial_error,embeddedness,get_p_known_exact
+export get_p_known_percolation, get_num_mutual_neighbors,
+reverse_vmap, get_mean_p_known_for_node, 
+get_components, get_connected_component,
+get_binomial_error,get_audience_fraction_binomial_error,
+embeddedness,get_p_known_exact,
+get_p_known_node_exact_neighborhood_graph,
+get_p_known_edge_exact_neighborhood_graph,
+sample_graph_edges_multiple_groups,
+get_audience_exact,
+get_audience_fraction_exact
 
 
 function graph_from_edges(edges,num_nodes)
@@ -12,6 +20,46 @@ function graph_from_edges(edges,num_nodes)
         add_edge!(g,e)
     end
     return g
+end
+
+    
+function reverse_vmap(vmap::Array{Int,1})
+    vmap_r = Dict{Int,Int}()
+    for (i,v) in enumerate(vmap)
+        vmap_r[v] = i
+    end
+    vmap_r
+end
+
+function get_p_known_node_exact_neighborhood_graph(g,v,p)
+    return get_p_known_exact(g,v,p)
+end
+
+function get_audience_fraction_exact(g,v,w,p)
+    all_neighbors = neighbors(g,v)
+    k = length(all_neighbors)
+    h,vmap = LightGraphs.induced_subgraph(g,all_neighbors)
+    vmap = reverse_vmap(vmap)
+    vs = vertices(h)
+    w = vmap[w]
+    return get_p_known_exact(h,w,p)
+end
+
+function get_audience_exact(g,v,w,p)
+    all_neighbors = neighbors(g,v)
+    k = length(all_neighbors)
+    return (k-1)*get_audience_fraction_exact(g,v,w,p)
+end
+
+
+function get_p_known_edge_exact_neighborhood_graph(g,v,w,p,q)
+    all_neighbors = neighbors(g,v)
+    k = length(all_neighbors)
+    h,vmap = LightGraphs.induced_subgraph(g,all_neighbors)
+    vmap = reverse_vmap(vmap)
+    vs = vertices(h)
+    w = vmap[w]
+    return q/k*(1 + (k-1)*get_p_known_node_exact_neighborhood_graph(h,w,p))
 end
     
 function get_p_known_exact(g,v,p)
@@ -196,6 +244,20 @@ function sample_graph_edges(g::LightGraphs.Graph,p::Real)
     return h
 end
 
+function sample_graph_edges_multiple_groups(g::LightGraphs.Graph,ps::Array{T,1} where T <: Real,edge_groups::Array{Array{Edge,1},1})
+    h = copy(g)
+    for (i,edge_group) in enumerate(edge_groups)
+        p = ps[i]
+        for ed in edge_group
+            if rand() < (1-p)
+                LightGraphs.rem_edge!(h,ed)
+            end
+        end
+    end
+    return h
+end
+
+
 function get_p_known_percolation(g::LightGraphs.Graph,p::Real,max_order::Int,num_trials = 100)
     p_knowns = zeros(size(LightGraphs.vertices(g)))
     singletons = get_singleton_nodes_array(g)
@@ -245,8 +307,15 @@ function get_p_known_percolation(g::LightGraphs.Graph,e::Pair{Int,Int},p::Real,n
     return connecteds/num_trials
 end
 
+#this assumes that paths to all neighbors are perfectly dependent (also not entirely true). This overestimates error.
 function get_binomial_error(p_est,n_samples)
     return sqrt(p_est*(1-p_est)/n_samples)
+end
+
+#binomial error if p is computed as the mean P to reach one of k neighbors. This 
+#assumes that paths to all neighbors are perfectly independent (not true). This underestimates error.
+function get_audience_fraction_binomial_error(p_est,n_samples,k)
+    return sqrt(p_est*(1-p_est)/(n_samples*k))
 end
 
 function embeddedness(g)
